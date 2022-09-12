@@ -1,0 +1,42 @@
+{
+  "files": {
+    "main.css": "./static/css/main.66460a05.chunk.css",
+    "main.js": "./static/js/main.b652352f.chunk.js",
+    "main.js.map": "./static/js/main.b652352f.chunk.js.map",
+    "runtime-main.js": "./static/js/runtime-main.f8a86024.js",
+    "runtime-main.js.map": "./static/js/runtime-main.f8a86024.js.map",
+    "static/css/2.c7b0328a.chunk.css": "./static/css/2.c7b0328a.chunk.css",
+    "static/js/2.910fb54f.chunk.js": "./static/js/2.910fb54f.chunk.js",
+    "static/js/2.910fb54f.chunk.js.map": "./static/js/2.910fb54f.chunk.js.map",
+    "index.html": "./index.html",
+    "static/css/2.c7b0328a.chunk.css.map": "./static/css/2.c7b0328a.chunk.css.map",
+    "static/css/main.66460a05.chunk.css.map": "./static/css/main.66460a05.chunk.css.map",
+    "static/js/2.910fb54f.chunk.js.LICENSE.txt": "./static/js/2.910fb54f.chunk.js.LICENSE.txt",
+    "static/media/Styles.css": "./static/media/cc.f8408bf7.ttf",
+    "static/media/aprc.fc75241f.png": "./static/media/aprc.fc75241f.png",
+    "static/media/bg.74e24a49.jpeg": "./static/media/bg.74e24a49.jpeg",
+    "static/media/bgg.5f53063d.png": "./static/media/bgg.5f53063d.png",
+    "static/media/billet.8e0c912a.png": "./static/media/billet.8e0c912a.png",
+    "static/media/born-sound.8be7451a.mp3": "./static/media/born-sound.8be7451a.mp3",
+    "static/media/borne.aac446c5.png": "./static/media/borne.aac446c5.png",
+    "static/media/cash.99b68bb2.jpg": "./static/media/cash.99b68bb2.jpg",
+    "static/media/cc.883bea09.png": "./static/media/cc.883bea09.png",
+    "static/media/coin.3b947962.png": "./static/media/coin.3b947962.png",
+    "static/media/delivery.c63ca6d5.png": "./static/media/delivery.c63ca6d5.png",
+    "static/media/initbg.11e4f645.mp4": "./static/media/initbg.11e4f645.mp4",
+    "static/media/loading.30c0aa7c.gif": "./static/media/loading.30c0aa7c.gif",
+    "static/media/logo.3c484734.png": "./static/media/logo.3c484734.png",
+    "static/media/serveur.496e23b3.png": "./static/media/serveur.496e23b3.png",
+    "static/media/sound.861677ae.mp3": "./static/media/sound.861677ae.mp3",
+    "static/media/surplace.2e0aa439.png": "./static/media/surplace.2e0aa439.png",
+    "static/media/takeout.47a36a20.png": "./static/media/takeout.47a36a20.png",
+    "static/media/updateorder.37f478bf.wav": "./static/media/updateorder.37f478bf.wav"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.f8a86024.js",
+    "static/css/2.c7b0328a.chunk.css",
+    "static/js/2.910fb54f.chunk.js",
+    "static/css/main.66460a05.chunk.css",
+    "static/js/main.b652352f.chunk.js"
+  ]
+}

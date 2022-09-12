@@ -1,0 +1,113 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "category": 11,
+      "name": "burger normal",
+      "description": "burger bnin barcha.",
+      "price": 20,
+      "img": "https://www.pngkit.com/png/full/402-4025958_cheese-burger-cheeseburger.png",
+      "nstep": 3,
+      "end": 3,
+      "qt": 0
+    },
+    {
+      "id": 2,
+      "category": 11,
+      "name": "burger black",
+      "description": "burger bnin barcha ama black",
+      "price": 18,
+      "img": "https://www.french-pizza.com/produit/1705_545.png",
+      "nstep": 3,
+      "end": 3,
+      "qt": 0
+    },
+    {
+      "id": 3,
+      "category": null,
+      "name": "pain normal",
+      "description": "5obz ch3ir",
+      "price": 0,
+      "img": "https://www.pinclipart.com/picdir/middle/521-5214114_hamburger-cartoon-burger-clipart-image-hamburger-buns-clip.png",
+      "nstep": null,
+      "end": null,
+      "qt": 0
+    },
+    {
+      "id": 4,
+      "category": null,
+      "name": "pain mech normal",
+      "description": "5obz gam7",
+      "price": 0,
+      "img": "https://www.pngmart.com/files/15/Hamburger-Bun-PNG-Transparent-Image.png",
+      "nstep": null,
+      "end": null,
+      "qt": 0
+    },
+    {
+      "id": 5,
+      "category": null,
+      "name": "frites small",
+      "description": "megly mlih mlih",
+      "price": 3,
+      "img": "https://img2.freepng.fr/20180514/jlw/kisspng-mcdonald-s-french-fries-fast-food-french-cuisine-c-5af95bb2021f39.7253647215262913780087.jpg",
+      "nstep": null,
+      "end": null,
+      "qt": 0
+    },
+    {
+      "id": 6,
+      "category": null,
+      "name": "frites XL",
+      "description": "megly mlih mlih",
+      "price": 5,
+      "img": "http://pngimg.com/uploads/fries/fries_PNG72.png",
+      "nstep": null,
+      "end": null,
+      "qt": 0
+    },
+    {
+      "id": 7,
+      "category": null,
+      "name": "celtia",
+      "description": "glass wel birra",
+      "price": 2,
+      "img": "https://www.geantdrive.tn/azur-city/319244-large_default/biere.jpg",
+      "nstep": null,
+      "end": null,
+      "qt": 0
+    },
+    {
+      "id": 8,
+      "category": null,
+      "name": "celtia",
+      "description": "glass wel birra",
+      "price": 2.5,
+      "img": "https://www.heineken.com/media-eu/01pfxdqq/heineken-original-bottle.png?quality=85",
+      "nstep": null,
+      "end": null,
+      "qt": 0
+    }
+  ],
+  "nsteps": [
+    {
+      "product_id": "3745",
+      "1": { "max_select": 1, "choice": ["3747", "3748"] },
+      "2": { "max_select": 1, "choice": ["3749", "3750"] },
+      "3": { "max_select": 1, "choice": ["3751", "3752"] }
+    },
+    {
+      "product_id": "3746",
+      "1": { "max_select": 1, "choice": ["3747", "3748"] },
+      "2": { "max_select": 1, "choice": ["3749", "3750"] },
+      "3": { "max_select": 1, "choice": ["3751", "3752"] }
+    }
+  ],
+  "categories": [
+    {
+      "id": "11",
+      "name": "burgers",
+      "img": "https://www.pngkit.com/png/full/402-4025958_cheese-burger-cheeseburger.png"
+    }
+  ]
+}
