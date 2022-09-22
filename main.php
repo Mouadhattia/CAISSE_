@@ -266,7 +266,7 @@ try {
 				$sum = $sum + $value['value'];
 			}
 			$recu = array_sum(array_column($payments, 'amount'));
-			$rendre = $sum - ($HTOut + $tvas);
+			$rendre = $sum - ($HTOut - $tvas);
 			if ($rendre > 0) {
 				$printer1->text("Rendre monnaie:" . $rendre . "€\n");
 			} else {

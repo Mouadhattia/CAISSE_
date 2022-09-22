@@ -338,19 +338,7 @@ else{
       });
   };
 const [addtva, setaddtva] = useState(0)
-useEffect(() => {
-  if(orderType=="emporter")
-{
-  setaddtva(5,5)
-}
-else if(orderType=='surplace')
-{
-  setaddtva(10)
-}else
-{
-  setaddtva(5,5)
-}
-}, [])
+
 
   const renderHTML = (rawHTML: string) =>
     React.createElement("div", {
@@ -366,7 +354,7 @@ else if(orderType=='surplace')
         </p>
         <img src={product.image} onClick={selectProduct} className="prod_img" />
         <div className="price">
-          {`${(product.price*addtva/100+product.price).toFixed(2)}`}
+          {`${(product.price).toFixed(2)}`}
           {renderHTML(`<i>${currency}</i>`)}
         </div>
         <FontAwesomeIcon

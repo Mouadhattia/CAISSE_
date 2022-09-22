@@ -566,10 +566,10 @@ else if(reso.isConfirmed)
             Date: new Date(),
             amount:
               amount >=
-              thisOrder?.totalPrice +
+              thisOrder?.totalPrice -
                 ((tvas * 100) / thisOrder?.totalPrice).toFixed(2)
                 ? (
-                    thisOrder?.totalPrice +
+                    thisOrder?.totalPrice -
                     (tvas * 100) / thisOrder?.totalPrice
                   ).toFixed(2) - amountPaid
                 : amount - amountPaid,

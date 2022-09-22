@@ -2185,7 +2185,7 @@ app.post("/api/printOrder", async (req, res) => {
       from_kiosk:order.from_kiosk,
       taxPrice: (order.totalPrice * tva) / 100,
       table_number: order.table_number,
-      totalPrice: order.totalPrice,
+      totalPrice: order.totalPrice -(order.totalPrice * tva) / 100,
       nbrCouvert: order.nbrCouverts,
       orderItems: ((items) => {
         items = items.map((item) => {
@@ -2278,7 +2278,7 @@ app.post("/api/printOrder", async (req, res) => {
       "Access-Control-Allow-Origin": "*",
     },
   };
-console.log("wa",JSON.stringify(post_data))
+
   const caisse = await safeDbRequest(
     () =>
       axios.post(post_data.restaurant.dynamic_ngrok_link+"/main.php", post_data, axiosConfig),
@@ -2427,8 +2427,8 @@ app.post("/api/printFinalOrder", async (req, res) => {
       id: order.order_id,
       orderType: order.orderType,
       table_number: order.table_number,
-      totalPrice: order.totalPrice,
-      taxPrice: order.totalPrice*tva/100,
+      totalPrice: order.totalPrice/(1+(tva/100)),
+      taxPrice: ((order.totalPrice/(tva+1))*tva)*tva/100,
       nbrCouvert: order.nbrCouverts,
       orderItems: ((items) => {
         items = items.map((item) => {
