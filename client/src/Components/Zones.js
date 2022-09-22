@@ -93,7 +93,7 @@ const Zones = () => {
         </Offcanvas.Header>
         <Offcanvas.Body>
           <div className="my_offcanvas">
-            <div className="offcanvas_item">
+            <div className="offcanvas_item" onClick={()=>navigate("/backoffice")}>
               <FontAwesomeIcon icon={faDesktop} />
               <p>Accéder aux back-Office</p>
             </div>
@@ -112,11 +112,11 @@ const Zones = () => {
               <FontAwesomeIcon icon={faAddressBook} />
               <p>Commandes a emporter</p>
             </div>
-            <div className="offcanvas_item">
+            <div className="offcanvas_item" onClick={()=>navigate("/avoires")}>
               <FontAwesomeIcon icon={faStickyNote} />
               <p>Gestion des avoirs</p>
             </div>
-            <div className="offcanvas_item">
+            <div className="offcanvas_item" onClick={()=>navigate("/cloture")}>
               <FontAwesomeIcon icon={faCashRegister} />
               <p>Cloture de caisse</p>
             </div>

@@ -9,6 +9,7 @@ module.exports = function (sequelize, DataTypes) {
         allowNull: false,
         primaryKey: true,
       },
+     
       created_at: { type: DataTypes.DATE },
       expires_at: { type: DataTypes.DATE },
       discount_percent: { type: DataTypes.INTEGER },
@@ -24,7 +25,12 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.STRING(50),
         allowNull: false,
       },
+      id_client: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
     },
+   
     {
       sequelize,
       tableName: "qr_coupon",

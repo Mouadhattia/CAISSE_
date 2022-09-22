@@ -8,14 +8,26 @@ const initialState = {
   orderHistory: [],
   clients: [],
   tva_mode: [],
+  coupons:[],
+  dataZ:[],
+  isallowedLivraison:false,
+  isallowedEmporter:false,
+
 };
 
 const dataSlice = createSlice({
   name: "data",
   initialState,
   reducers: {
+    storeCoupon:(state,action)=>{   
+      state.coupons=action.payload.coupons
+      console.log(state.coupons)
+    },
     storeClients: (state, action) => {
       state.clients = action.payload.clients;
+    },
+    storeDataz: (state, action) => {
+      state.dataZ = action.payload.dataZ;
     },
     storeZones: (state, action) => {
       state.zones = action.payload.zones;
@@ -43,9 +55,17 @@ const dataSlice = createSlice({
         (prod) => prod.id == action.payload.id
       );
       let copy = [...state.products];
-      copy[prodIndex] = { ...copy[prodIndex], active: 0 };
+      let con=0
+      copy[prodIndex].active==0?con=1:con=0
+      copy[prodIndex] = { ...copy[prodIndex], active:con };
       state.products = copy;
     },
+    updateEmporter: (state, action) => {
+state.isallowedEmporter=!state.isallowedEmporter
+    },
+    updateLivraison: (state, action) => {
+      state.isallowedLivraison=!state.isallowedLivraison
+          },
   },
 });
 
@@ -60,5 +80,8 @@ export const {
   storeClients,
   updateProduct,
   storeTvaMode,
+  storeCoupon,
+  storeDataz
+  
 } = dataSlice.actions;
 export default reducer;

@@ -6,8 +6,10 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Init from "./Screens/Init";
 import Main from "./Screens/Main";
+import Backoffice from "./Screens/Backoffice";
 import Menu from "./Screens/Menu";
 import Caisse from "./Screens/Caisse";
+import Avoires from "./Screens/Avoires";
 import Cloture from "./Screens/Cloture";
 import Test from "./Screens/Test";
 import { Button } from "react-bootstrap";
@@ -16,15 +18,18 @@ import CheckoutTwo from "./Screens/CheckoutTwo";
 import History from "./Screens/History";
 import Clients from "./Screens/Clients";
 import CalendarScreen from "./Screens/CalendarScreen";
+
 import io from "socket.io-client";
 import { useDispatch } from "react-redux";
 import { setCheckoutChange } from "./Slices/order";
 import Swal from "sweetalert2";
 import updateSound from "./Shared/updateorder.wav";
 import bornSound from "./Shared/born-sound.mp3";
+import Zcaisse from "./Screens/Zcaisse";
 
 const socket = io.connect(process.env.REACT_APP_API_SOCKET);
 function App() {
+  
   const [soundUpdate, setSoundUpdate] = useState(new Audio(updateSound));
   const [audioBorn, setaudioBorn] = useState(new Audio(bornSound));
   const dispatch = useDispatch()
@@ -84,12 +89,16 @@ function App() {
         <Route path="/calendar" element={<CalendarScreen />} />
         <Route path="/history/:type" element={<History />} />
         <Route path="/clients" element={<Clients />} />
+        <Route path="/data/zcaisse" element={<Zcaisse />} />
+        <Route path="/avoires" element={<Avoires />} />
+        <Route path="/backoffice" element={<Backoffice />} />
         <Route path="/clients/:id" element={<Clients />} />
-
+        
         <Route
           path="/checkout2/:table_id/:type/:part"
           element={<CheckoutTwo />}
         />
+         
         <Route path="/checkout/:table_id" element={<Checkout />} />
         <Route path="/test" element={<Test />} />
       </Routes>

@@ -104,7 +104,7 @@ const History = () => {
   return (
     <div className="navbar">
       <Navbar
-        style={{ backgroundColor: "#ff6b6b", height: "70px" }}
+        style={{  height: "60px" }}
         variant="warning"
       >
         <Container className="history-navbar">
@@ -291,16 +291,7 @@ const History = () => {
                     (client) =>
                       client.nom_prenom
                         .toLowerCase()
-                        .includes(search.toLowerCase()) ||
-                      client.email
-                        .toLowerCase()
-                        .includes(search.toLowerCase()) ||
-                      client.adresse
-                        .toLowerCase()
-                        .includes(search.toLowerCase()) ||
-                      client.ville
-                        .toLowerCase()
-                        .includes(search.toLowerCase()) ||
+                        .includes(search.toLowerCase()) ||                     
                       client.telephone.includes(search)
                   )
                   .map((client, key) => (

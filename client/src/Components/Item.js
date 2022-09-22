@@ -35,7 +35,7 @@ const Item = ({ product, setAlert, order_id,setconfirmed,confirmed }) => {
   const [selected, setselected] = useState(1);
   const [showPreview, setShowPreview] = useState(false);
   const [showSupplements, setShowSupplements] = useState(false);
-
+  const orderType = useSelector((state) => state.order.orderType);
   const [newProduct, setnewProduct] = useState(undefined);
   const [showstock, setshowstock] = useState(false);
   const [tva, setTva] = useState(null);
@@ -337,6 +337,20 @@ else{
         });
       });
   };
+const [addtva, setaddtva] = useState(0)
+useEffect(() => {
+  if(orderType=="emporter")
+{
+  setaddtva(5,5)
+}
+else if(orderType=='surplace')
+{
+  setaddtva(10)
+}else
+{
+  setaddtva(5,5)
+}
+}, [])
 
   const renderHTML = (rawHTML: string) =>
     React.createElement("div", {
@@ -345,14 +359,14 @@ else{
   const currency = localStorage.getItem("currency");
   return (
     <>
-      <ToastContainer />
+      
       <div className="item_container">
         <p>
           <b>{product.name.substring(0, 21)}</b>
         </p>
         <img src={product.image} onClick={selectProduct} className="prod_img" />
         <div className="price">
-          {`${product.price.toFixed(2)}`}
+          {`${(product.price*addtva/100+product.price).toFixed(2)}`}
           {renderHTML(`<i>${currency}</i>`)}
         </div>
         <FontAwesomeIcon

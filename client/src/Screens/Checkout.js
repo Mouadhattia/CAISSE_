@@ -2,6 +2,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useEffect, useRef, useState } from "react";
 import tableIcon from "./../Shared/table.png";
 import {
+  Badge,
   Button,
   Col,
   Container,
@@ -41,6 +42,7 @@ import useTranslation from "./../i18";
 import { useNavigate } from "react-router";
 import {
   deletecheckoutData,
+  initClient,
   setCheckoutChange,
   setNbrCouverts,
 } from "../Slices/order";
@@ -53,8 +55,35 @@ import Keyboard from "react-simple-keyboard";
 import "react-simple-keyboard/build/css/index.css";
 import $ from "jquery";
 import Swal from "sweetalert2";
+import { Typeahead } from "react-bootstrap-typeahead";
 
 const Checkout = () => {
+  var curr = new Date();
+  var time = curr.getHours() + ":" + curr.getMinutes();
+  var date = curr.toISOString().substr(0, 10);
+  const [idz, setidz] = useState(0)
+  const [clientone, setclientone] = useState({
+    prenom: "",
+    company: "",
+    code1: "",
+    code2: "",
+    etage: "",
+    interphone: "",
+    name: "",
+    phone: "",
+    address: "",
+    post: "",
+    city: "",
+    message: "",
+    email: "",
+    type: "emporter",
+    nbrCouverts: 1,
+    date: date,
+    time: time,
+    id:0
+  });
+  const [isavoir, setisavoir] = useState(false)
+  const [showform, setshowform] = useState(false)
   const [load, setLoad] = useState(false)
   const username = localStorage.getItem("username") || "";
   const params = useParams();
@@ -65,9 +94,10 @@ const Checkout = () => {
   const ordersData = useSelector((state) => state.order.checkoutData);
   const selectedTable = useSelector((state) => state.order.selectedTable);
   const client = useSelector((state) => state.order.client);
+  const clients = useSelector((state) => state.data.clients);
   console.log(ordersData);
   let thisOrder = ordersData.filter((o) => o.order_id == table_id)[0] || {};
-
+  
   console.log(thisOrder);
   if (thisOrder.totalPrice == undefined) {
     thisOrder = {
@@ -84,6 +114,9 @@ const Checkout = () => {
   var curr_hour = orderDate?.getHours();
   var curr_min = orderDate?.getMinutes();
   const [show, setShow] = useState(false);
+  const [showtwo, setshowtwo] = useState(false)
+  const [old, setOld] = useState(false);
+  const [showHistoryButton, setshowHistoryButton] = useState(false);
   const [showPay, setShowPay] = useState(false);
   const [accompte, setAccompte] = useState(false);
   const [part, setPart] = useState(1);
@@ -99,16 +132,124 @@ const Checkout = () => {
   const [acompte, setAcompte] = useState(false);
   const [coupon, setCoupon] = useState("");
   const [payments, setpayments] = useState([]);
-  const [getkeyborad, setkeyborad] = useState(0);
   const user_id = localStorage.getItem("user_id");
-
+ const handlefinal=(id)=>{
+  setisavoir(true)
+  thisOrder={...thisOrder,client_id:id,customer_name:clientone.name,customer_tel:client.phone}
+    axios
+    .post(
+      process.env.REACT_APP_API_HOST +
+        ":" +
+        process.env.REACT_APP_API_PORT +
+        "/api/finalizeorder",
+      {
+        order: {
+          ...thisOrder,
+          nbrCouverts: nbrCouverts,
+          message: note,
+          pay_method: paymentType,
+          amount: amount,
+          amountPaid: amountPaid,
+        },
+      }
+    )
+    .then((res) => {
+      console.log(res.data);
+         
+      console.log(amount);
+      console.log(amountPaid);
+      setpayments([...payments, { type: paymentType, value: amount }]);
+      let paid = ["Glovo", "Just-Eat", "Deliveroo", "Uber Eats","ticket restaurant"].includes(
+        paymentType
+      );
+      setTimeout(() => {
+        if (
+          amountPaid + amount >=
+          (
+            thisOrder?.totalPrice +
+            (thisOrder?.totalPrice * tvas) / 100
+          ).toFixed(2)
+        ) 
+          handleExit();
+        
+      }, 1);
+      setAmount(0);
+    })
+    .catch((err) => {
+      console.log(err);
+    })
+  }
+  const handleCreate = () => {
+     
+    if (old == false) {
+      axios
+        .post(
+          process.env.REACT_APP_API_HOST +
+            ":" +
+            process.env.REACT_APP_API_PORT +
+            "/api/createClient",
+          {
+            user_id,
+            client: {
+              etage: clientone.etage || 0,
+              interphone: clientone.interphone || 0,
+              supprimer: 0,
+              societe: clientone.company || "",
+              nom_prenom: clientone.name || "",
+              telephone: clientone.phone || "",
+              adresse: clientone.address || "",
+              code_postal: clientone.post || 0,
+              ville: clientone.city || "",
+              email: clientone.email || "",
+              code_1: clientone.code1 || "",
+              code_2: clientone.code2 || "",
+          
+            },
+          }
+        )
+        .then((res) => {  
+handlefinal(res.data.id);
+})
+        .catch((err) => console.log(err));
+    } else {
+      dispatch(initClient({ clientone }));  
+      handlefinal();   
+    }    
+  };
+  const handleSelection = (x) => {
+    setOld(true);
+    let selectedClient = clients?.filter(
+      (e) =>
+        e.nom_prenom?.toLowerCase().includes(x?.toLowerCase()) ||
+        e.telephone?.toLowerCase().includes(x?.toLowerCase()) ||
+        e.email?.toLowerCase().includes(x?.toLowerCase())
+    )[0];
+    if (selectedClient) {
+      setclientone({
+        ...clientone,
+        id: selectedClient.id,
+        prenom: selectedClient.nom_prenom,
+        company: selectedClient.societe,
+        code1: selectedClient.code_1,
+        code2: selectedClient.code_2,
+        etage: selectedClient.etage,
+        interphone: selectedClient.interphone,
+        name: selectedClient.nom_prenom,
+        phone: selectedClient.telephone,
+        address: selectedClient.adresse,
+        post: selectedClient.code_postal,
+        city: selectedClient.ville,
+        email: selectedClient.email,
+      });
+    }
+  };
   var groupBy = function (xs, key) {
     return xs.reduce(function (rv, x) {
       (rv[x[key]] = rv[x[key]] || []).push(x.value);
       return rv;
     }, {});
   };
-
+  
   let tvas = 0;
   let is_alcool = false;
   let test = thisOrder.orderItems;
@@ -205,51 +346,151 @@ const Checkout = () => {
     curr_min;
 
   // let tax = (thisOrder.taxPrice * thisOrder.totalPrice) / 100;
-
   const handleFinal = () => {
-    setLoad(true)
-    axios
-      .post(
-        process.env.REACT_APP_API_HOST +
-          ":" +
-          process.env.REACT_APP_API_PORT +
-          "/api/finalizeorder",
-        {
-          order: {
-            ...thisOrder,
-            nbrCouverts: nbrCouverts,
-            message: note,
-            pay_method: paymentType,
-            amount: amount,
-            amountPaid: amountPaid,
-          },
+    let restAvoir = (amount- (thisOrder?.totalPrice +
+      (thisOrder?.totalPrice * tvas) / 100)).toFixed(2)
+      console.log(restAvoir)
+    if(restAvoir>0)
+    {
+      Swal.fire({
+        title: "Comment voulez-vous rendre la monnaies ?",
+        showDenyButton: true,
+        showCancelButton: false,
+        confirmButtonText: "Avoir",
+        denyButtonText: `Rendre monnaies directement`,
+      }).then((result) => {
+        /* Read more about isConfirmed, isDenied below */
+        if (result.isDenied) {
+          axios
+          .post(
+            process.env.REACT_APP_API_HOST +
+              ":" +
+              process.env.REACT_APP_API_PORT +
+              "/api/finalizeorder",
+            {
+              order: {
+                ...thisOrder,
+                nbrCouverts: nbrCouverts,
+                message: note,
+                pay_method: paymentType,
+                amount: amount,
+                amountPaid: amountPaid,
+              },
+            }
+          )
+          .then((res) => {
+            console.log(res.data);
+               
+            console.log(amount);
+            console.log(amountPaid);
+            setpayments([...payments, { type: paymentType, value: amount }]);
+            let paid = ["Glovo", "Just-Eat", "Deliveroo", "Uber Eats","ticket restaurant"].includes(
+              paymentType
+            );
+            setTimeout(() => {
+              if (
+                amountPaid + amount >=
+                (
+                  thisOrder?.totalPrice +
+                  (thisOrder?.totalPrice * tvas) / 100
+                ).toFixed(2)
+              ) {
+                handleExit();
+              }
+            }, 1);
+            setAmount(0);
+          })
+          .catch((err) => {
+            console.log(err);
+          })
+              
         }
-      )
-      .then((res) => {
-        console.log(res.data);
-           
-        console.log(amount);
-        console.log(amountPaid);
-        setpayments([...payments, { type: paymentType, value: amount }]);
-        let paid = ["Glovo", "Just-Eat", "Deliveroo", "Uber Eats","ticket restaurant"].includes(
-          paymentType
-        );
-        setTimeout(() => {
-          if (
-            amountPaid + amount >=
-            (
-              thisOrder?.totalPrice +
-              (thisOrder?.totalPrice * tvas) / 100
-            ).toFixed(2)
-          ) {
-            handleExit();
-          }
-        }, 1);
-        setAmount(0);
+        else if (result.isConfirmed)
+        {
+          Swal.fire({
+            title: "Client existant ?",
+            showDenyButton: true,
+            showCancelButton: false,
+            confirmButtonText: "Oui",
+            denyButtonText: `Non`,
+          }).then((reso) => {
+if(reso.isDenied)
+{
+  setisavoir(true)
+  setshowform(true)
+}
+else if(reso.isConfirmed)
+{
+  setshowtwo(true)
+  setisavoir(true)
+  
+}
+          })
+        }
+        else if (result.isConfirmed&&thisOrder.customer_tel!="")
+
+        {
+          setisavoir(true)
+          setshowform(true)
+        }
+        else if (result.isConfirmed&&thisOrder.customer_tel=="")
+        {
+          setisavoir(true)
+          setshowform(true)
+        }
+        else if(result.isConfirmed) {
+          setisavoir(true)
+        }
       })
-      .catch((err) => {
-        console.log(err);
-      });
+    }else {
+  
+      {
+        axios
+        .post(
+          process.env.REACT_APP_API_HOST +
+            ":" +
+            process.env.REACT_APP_API_PORT +
+            "/api/finalizeorder",
+          {
+            order: {
+              
+              ...thisOrder,
+              nbrCouverts: nbrCouverts,
+              message: note,
+              pay_method: paymentType,
+              amount: amount,
+              amountPaid: amountPaid,
+            },
+          }
+        )
+        .then((res) => {
+          console.log(res.data);
+             
+          console.log(amount);
+          console.log(amountPaid);
+          setpayments([...payments, { type: paymentType, value: amount }]);
+          let paid = ["Glovo", "Just-Eat", "Deliveroo", "Uber Eats","ticket restaurant"].includes(
+            paymentType
+          );
+          setTimeout(() => {
+            if (
+              amountPaid + amount >=
+              (
+                thisOrder?.totalPrice +
+                (thisOrder?.totalPrice * tvas) / 100
+              ).toFixed(2)
+            ) {
+              handleExit();
+            }
+          }, 1);
+          setAmount(0);
+        })
+        .catch((err) => {
+          console.log(err);
+        })
+      }
+    }
+    
   };
   const handleAddition = () => {
     console.log("called");
@@ -281,6 +522,7 @@ const Checkout = () => {
   };
 
   const handleExit = () => {
+
     let tva = 0;
     let is_alcool = false;
     let test = thisOrder.orderItems;
@@ -307,14 +549,13 @@ const Checkout = () => {
           break;
       }
     }
-    
     axios
       .post(
         process.env.REACT_APP_API_HOST +
           ":" +
           process.env.REACT_APP_API_PORT +
           "/api/printFinalOrder",
-        {
+        {isavoir,
           user_id: user_id,
           order: {
             ...thisOrder,
@@ -375,20 +616,39 @@ const Checkout = () => {
     }
     let restAvoir = (amount- (thisOrder?.totalPrice +
       (thisOrder?.totalPrice * tvas) / 100)).toFixed(2)
+     
       let amountss = amount.toFixed(2)
-    Swal.fire({
-      icon: "success",
-      title:
-        "<h5 >" +
-        `le paiement effectué avec succès avec montant: <span style='color:red'>${amountss}€</span> du reste:<span style='color:green'>${restAvoir}€</span> ` +
-        "</h5>",
-      showConfirmButton: false,
-      timer: 3000,
-    });
-    setLoad(false)
-    navigate("/main");
-    dispatch(deletecheckoutData({ order_id: table_id }));
-  };
+      if (paymentType=="ticket restaurant"||isavoir==true)
+      {
+        Swal.fire({
+          icon: "success",
+          title:
+            "<h5 >" +
+            `le paiement effectué avec succès avec montant: <span style='color:red'>${amountss}€</span> D'avoir:<span style='color:green'>${restAvoir}€</span> ` +
+            "</h5>",
+          showConfirmButton: false,
+          timer: 3000,
+        });
+        setLoad(false)
+        navigate("/main");
+        dispatch(deletecheckoutData({ order_id: table_id }));
+      }else {
+        Swal.fire({
+          icon: "success",
+          title:
+            "<h5 >" +
+            `le paiement effectué avec succès avec montant: <span style='color:red'>${amountss}€</span> du reste:<span style='color:green'>${restAvoir}€</span> ` +
+            "</h5>",
+          showConfirmButton: false,
+          timer: 3000,
+        });
+        setLoad(false)
+        navigate("/main");
+        dispatch(deletecheckoutData({ order_id: table_id }));
+
+      }
+      }
+   
 
   const renderHTML = (rawHTML: string) =>
     React.createElement("div", {
@@ -493,6 +753,7 @@ const Checkout = () => {
 
   return (
     <div style={{ backgroundColor: "white" }}>
+      
       <Navbar variant="warning" className="navbar">
         <Container className="history-navbar">
           <Navbar.Brand>
@@ -556,6 +817,7 @@ const Checkout = () => {
         </Container>
       </Navbar>
       <Container fluid>
+        
         <Row className="row_h">
           <Col xs={8} className="col_h">
             <div
@@ -600,24 +862,24 @@ const Checkout = () => {
                     <b>Table {selectedTable.nbr}</b>
                   </h6>}
                 </div>
-                {Object.keys(client).length > 0 ? (
+                {Object.keys(clientone).length > 0 ? (
                   <div className="rightt">
                     <h6 className="checkout-tbd">
-                      <b>{client.name}</b>
+                      <b>{clientone.name}</b>
                     </h6>
                     <h6 className="checkout-tbd">
                       <FontAwesomeIcon
                         icon={faPhone}
                         style={{ color: "#ff6b6b", marginRight: "1rem" }}
                       />
-                      <b>{client.phone}</b>
+                      <b>{clientone.phone}</b>
                     </h6>
                     <h6 className="checkout-tbd">
                       <FontAwesomeIcon
                         icon={faMapMarkerAlt}
                         style={{ color: "#ff6b6b", marginRight: "1rem" }}
                       />
-                      <b>{client.address}</b>
+                      <b>{clientone.address}</b>
                     </h6>
                     <h6 className="checkout-tbd">
                       <FontAwesomeIcon
@@ -888,6 +1150,9 @@ const Checkout = () => {
             ;
           </Modal.Body>
           <Modal.Footer>
+          <Button variant="secondary" onClick={()=>navigate('/main')}>
+              Annuler
+            </Button>
             <Button variant="secondary" onClick={handleClose}>
               Fermer
             </Button>
@@ -902,6 +1167,157 @@ const Checkout = () => {
         </Modal>
         {/* /////ShowPayModal////// */}
         <Modal show={showPay} onHide={() => setShowPay(false)}>
+        {showform?
+        <div className="trans_client" >
+                   <div className="client_forms">
+                   <Form auto>
+                    <Form.Group className="mb-3">
+                      <Row>
+                        <Col>
+                          <Form.Control
+                            value={clientone.name}
+                            type="text"
+                            placeholder="nom/prenom"
+                            onChange={(e) =>
+                              setclientone({ ...clientone, name: e.target.value })
+                            }
+                          />
+                        </Col>
+                      </Row>
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                      <Row>
+                        <Col>
+                          {clientone.telephone?.length > 0 &&
+                          clientone.telephone?.length < 10 ? (
+                            <Badge bg="danger">
+                              Numero pas valide (10 chiffres obligatoire)
+                            </Badge>
+                          ) : (
+                            ""
+                          )}
+                          <Typeahead
+                            onInputChange={(e) => {
+                              setclientone({ ...clientone, phone: e });
+                              setOld(false);                       
+                            }}
+                            onChange={(e) => {
+                              handleSelection(e[0]);
+                              console.log(e);
+                            }}
+                            options={clients.map((client) => client.telephone)}
+                            placeholder="telephone"
+                          />
+                        </Col>
+                      </Row>
+                    </Form.Group>
+
+                    <Form.Group className="mb-3">
+                      <Row>
+                        <Col>
+                          <Form.Control
+                            value={clientone.message}
+                            as="textarea"
+                            type="text"
+                            placeholder="remarque"
+                            onChange={(e) =>
+                              setclientone({
+                                ...clientone,
+                                message: e.target.value,
+                              })
+                            }
+                          />
+                        </Col>
+                      </Row>
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                      <Row>
+                        <Col>
+                          <Form.Control
+                            value={clientone.date}
+                            type="date"
+                            defaultValue={clientone.date}
+                            onChange={(e) =>
+                              setclientone({ ...clientone, date: e.target.value })
+                            }
+                          />
+                        </Col>
+                        <Col>
+                          <Form.Control
+                            value={clientone.time}
+                            type="time"
+                            defaultValue={clientone.time}
+                            onChange={(e) =>
+                              setclientone({ ...clientone, time: e.target.value })
+                            }
+                          />
+                        </Col>
+                      </Row>
+                    </Form.Group>
+                  </Form>  
+        <Button onClick={()=>handleCreate()}>
+          Valider
+        </Button>
+                   </div>
+             
+        </div>     
+        :""}
+         {showtwo?
+        <div className="trans_client" >
+                   <div className="client_forms">
+                   <Form auto>
+                   <Form.Group className="mb-3">
+                      <Row>
+                        <Col>
+                          {clientone.telephone?.length > 0 &&
+                          clientone.telephone?.length < 10 ? (
+                            <Badge bg="danger">
+                              Numero pas valide (10 chiffres obligatoire)
+                            </Badge>
+                          ) : (
+                            ""
+                          )}
+                          <Typeahead
+                            onInputChange={(e) => {
+                              setclientone({ ...clientone, phone: e });
+                              setOld(false);                       
+                            }}
+                            onChange={(e) => {
+                              handleSelection(e[0]);
+                              console.log(e);
+                            }}
+                            options={clients.map((client) => client.telephone)}
+                            placeholder="telephone"
+                          />
+                        </Col>
+                      </Row>
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                      <Row>
+                        <Col>
+                          <Form.Control
+                            value={clientone.name}
+                            type="text"
+                            placeholder="nom/prenom"
+                            onChange={(e) =>
+                              setclientone({ ...clientone, name: e.target.value })
+                            }
+                          />
+                        </Col>
+                      </Row>
+                    </Form.Group>
+                  
+
+          
+                   
+                  </Form>  
+        <Button onClick={()=>handleCreate()}>
+          Valider
+        </Button>
+                   </div>
+             
+        </div>     
+        :""}
           <Modal.Header closeButton>
             <Modal.Title>finaliser Commande</Modal.Title>
           </Modal.Header>

@@ -11,6 +11,7 @@ var http = require("http");
 const e = require("express");
 const { Op } = require("sequelize");
 const { AsyncLocalStorage } = require("async_hooks");
+const { map } = require("lodash");
 //141.94.77.9
 require("dotenv").config();
 
@@ -124,6 +125,7 @@ app.get("/api/restoreSession", async (req, res) => {
     {}
   );
   if (!session) {
+   
     return res.json({ allowed: false });
   }
   const timestamp = session.timestamp;
@@ -139,7 +141,40 @@ app.get("/api/restoreSession", async (req, res) => {
   );
   return res.json({ allowed: session_after.length === 0 });
 });
-
+///Login Zcaisse
+app.post("/api/initZcaisse", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    let user = await safeDbRequest(
+      () => db.qr_user.findOne({ where: { username } }),
+      {}
+    );
+   
+    let password_hash = user.password_hash;
+    password_hash = password_hash.replace(/^\$2y(.+)$/i, "$2a$1");
+    let data={
+      user:{},
+      history:[]
+    }
+    if (await verifyPassword(password, password_hash)){
+      data={...data,user:user.dataValues,}
+    }else{
+      res.status(400).send({ msg: "wrong password" });
+    }
+    let allHistorique = await safeDbRequest(() => {
+      return db.qr_zcaisse_hstorique.findAll({
+        where: { user_id: user.id },
+      });
+    }, []);
+    allHistorique=allHistorique.map((historique)=>historique.dataValues)
+    data={...data,history:allHistorique}
+    res.status(200).send(data)
+  } catch (error) {
+  
+    res.status(400).send({ msg: "user not found" });
+  }
+});
+    //////////////
 app.post("/api/init", async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -236,6 +271,25 @@ if(client.nom_prenom !=''){
   
 });
 
+app.post("/api/getcoupons", async (req, res) => {
+  const { user_id,caisse_id } = req.body;
+  const lastOuverture = await safeDbRequest(() => {
+    return db.qr_historique.findOne({
+      where: { caisse_id: caisse_id, type: "open" },
+      order: [["date", "DESC"]],
+    });
+  }, {});
+  const coupons = await safeDbRequest(() => {
+    return db.qr_coupon.findAll(      
+      { where: { user_id: user_id, created_at: {
+        [Op.gte]: lastOuverture.dataValues.date,
+      },},order: [["id", "DESC"]],}
+    );
+  }, []);
+  console.log({x:coupons[0]})
+  
+  res.status(200).send(coupons);
+});
 app.post("/api/updateClient", async (req, res) => {
   const { user_id, client, client_id } = req.body;
 
@@ -637,6 +691,7 @@ try {
       where: { user_id: user_id },
     });
   }, {});
+  
   res.status(200).send({ allHistorique});
 } catch (error) {
   console.log(error)
@@ -935,13 +990,26 @@ app.post(`/api/products`, async (req, res) => {
     menuSteps: [...menuSteps],
   });
 });
+app.post("/api/bringwarehouse", async (req, res) => {
+  let { prod_id } = req.body;
+  const updatedProduct = await safeDbRequest(() => {
+    return db.qr_menu.update(
+      {
+        active: "1"
+      },
+      { where: { id: prod_id } }
+    );
+  }, {});
+
+  res.status(200).send(updatedProduct);
+});
 
 app.post("/api/resetwarehouse", async (req, res) => {
   let { prod_id } = req.body;
   const updatedProduct = await safeDbRequest(() => {
     return db.qr_menu.update(
       {
-        active: "0",
+        active: "0"
       },
       { where: { id: prod_id } }
     );
@@ -2210,7 +2278,7 @@ app.post("/api/printOrder", async (req, res) => {
       "Access-Control-Allow-Origin": "*",
     },
   };
-
+console.log("wa",JSON.stringify(post_data))
   const caisse = await safeDbRequest(
     () =>
       axios.post(post_data.restaurant.dynamic_ngrok_link+"/main.php", post_data, axiosConfig),
@@ -2252,7 +2320,7 @@ app.post("/api/printOrder", async (req, res) => {
 });
 
 app.post("/api/printFinalOrder", async (req, res) => {
-  const { user_id, order, type, part, pricepart, numbrpayment } = req.body;
+  const { user_id, order, type, part, pricepart,isavoir } = req.body;
  
   let tva = 0;
   let is_alcool = false;
@@ -2355,6 +2423,7 @@ app.post("/api/printFinalOrder", async (req, res) => {
     part: part,
     order: {
       remarque: order.message,
+      client_id:order.client_id,
       id: order.order_id,
       orderType: order.orderType,
       table_number: order.table_number,
@@ -2485,7 +2554,7 @@ app.post("/api/printFinalOrder", async (req, res) => {
   
   if (
     order.paymentType == "ticket restaurant" &&
-    order.totalPrice + order.taxPrice < order.amountPaid
+    order.totalPrice + order.taxPrice < order.amountPaid|| isavoir==true
   ) {
    
     let today = new Date().toISOString().slice(0, 10);
@@ -2512,6 +2581,7 @@ app.post("/api/printFinalOrder", async (req, res) => {
         used: 0,
         created_at: today,
         expires_at: day,
+        id_client:order.client_id
       });
     }, {});
    
@@ -2596,14 +2666,15 @@ app.post("/api/updatehow_paid", async (req, res) => {
   }
 });
 app.post("/api/finalizeorder", async (req, res) => {
-  const { order, amountnow } = req.body;
+  const { order, amountnow,isavoir } = req.body;
 
   if (order.amount != 0) {
     try {
       const UpdatedOrder = await safeDbRequest(
         () =>
           db.qr_orders.update(
-            {
+            {customer_id:order.client_id,
+              customer_name:order.client_name,
               status: "completed",
               message: order.message,
               pay_method: order.pay_method,

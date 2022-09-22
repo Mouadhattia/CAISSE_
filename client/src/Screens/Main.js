@@ -41,7 +41,6 @@ const Main = () => {
   const user_id = localStorage.getItem("user_id");
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
 useEffect(() => {
   socket.on("a",(data)=>{
     console.log(data)

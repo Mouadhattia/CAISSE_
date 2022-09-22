@@ -775,7 +775,7 @@ const CartMenu = ({ selectedTable, setconfirmed, confirmed }) => {
         <h6 className="cart-menu-table-nbr">{`table ${nbr} - ${nbrCouverts} ${t(
           "couverts"
         )}`}</h6>
-      ) : client.name ? (
+      ) : client.name? (
         <h6 className="cart-menu-table-nbr">{`Client ${client.name} - ${client.type}
           `}</h6>
       ) : 
@@ -791,7 +791,7 @@ const CartMenu = ({ selectedTable, setconfirmed, confirmed }) => {
         </thead>
         <tbody
           className="scro2 "
-          style={{ backgorunImage: `url(${cartbg}) !important` }}
+         
         >
           {newOrders?.map((order, key) => (
             <tr

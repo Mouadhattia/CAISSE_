@@ -1,10 +1,10 @@
 import useTranslation from "./../i18";
 import axios from "axios";
 import Swal from "sweetalert2";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Dropdown from "react-dropdown";
 import "react-dropdown/style.css";
-
+import LinkIcon from '@mui/icons-material/Link';
 import {
   Button,
   Col,
@@ -41,7 +41,30 @@ const Cloture = () => {
   const user_id = localStorage.getItem("user_id") || "";
   const username = localStorage.getItem("username") || "";
   const caisse_id = localStorage.getItem("caisse_id");
-
+  const [copySuccess, setCopySuccess] = useState('');
+  const textAreaRef = useRef(null);
+  const copyToClipBoard = async copyMe => {
+    try {
+      await navigator.clipboard.writeText(copyMe);
+      setCopySuccess('Copied!');
+      Swal.fire({
+        position: "center",
+        icon: "success",
+        title: "lien copiée",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    } catch (err) {
+      setCopySuccess('Failed to copy!');
+      Swal.fire({
+        position: "center",
+        icon: "success",
+        title: "Error",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    }
+  };
   var curr = new Date();
   var date = curr.toISOString().substr(0, 10);
   const options = [date, "two", "three"];
@@ -256,6 +279,7 @@ useEffect(() => {
 }, [])
 
   useEffect(async () => {
+ 
     console.log(selectedDate);
     await axios
       .post(
@@ -727,6 +751,7 @@ useEffect(() => {
           <Button variant="success" onClick={() => showZcaisse(el.data)} style={{marginLeft:"1rem"}} >
             Afficher
           </Button>
+         
                 </div>
         
 
@@ -735,6 +760,12 @@ useEffect(() => {
           </div>
         </Modal.Body>
         <Modal.Footer>
+          <div>
+          <Button variant="success" onClick={() => navigate('/data/zcaisse')} >
+           Zcaisse
+          </Button>         
+          </div>
+        
           <Button variant="secondary" onClick={() => setPreviewHistory(false)}>
             Fermer
           </Button>

@@ -119,6 +119,7 @@ const NaviBottom = () => {
       });
   }, []);
   const [orderHistory, setOrderHistory] = useState([]);
+
   const [orderLoding, setOrderLoding] = useState(false);
   const [selectedTable, setSelectedTable] = useState({});
   const [newClient, setnewClient] = useState({});
@@ -304,9 +305,9 @@ if(client.type!="surplace")
     setOld(true);
     let selectedClient = clients?.filter(
       (e) =>
-        e.nom_prenom.toLowerCase().includes(x?.toLowerCase()) ||
-        e.telephone.toLowerCase().includes(x?.toLowerCase()) ||
-        e.email.toLowerCase().includes(x?.toLowerCase())
+        e.nom_prenom?.toLowerCase().includes(x?.toLowerCase()) ||
+        e.telephone?.toLowerCase().includes(x?.toLowerCase()) ||
+        e.email?.toLowerCase().includes(x?.toLowerCase())
     )[0];
 
    
@@ -586,7 +587,7 @@ if(client.type!="surplace")
             <Modal.Title>
               <div style={{ width: "100%" }}>
                 <h5>Choix du mode de consommation</h5>
-                <Button
+                {user_id!='150'?<Button
                   size="lg"
                   variant={
                     client?.type == "emporter" ? "light" : "outline-warning"
@@ -599,9 +600,10 @@ if(client.type!="surplace")
                   onClick={() => {dispatch(setType("emporter")) ;setClient({ ...client, type: "emporter" })}}
                 >
                   A emporter
-                </Button>
+                </Button>:''}
+                
 
-                <Button
+{user_id!='150'? <Button
                   size="lg"
                   variant={
                     client?.type == "livraison" ? "light" : "outline-warning"
@@ -614,7 +616,8 @@ if(client.type!="surplace")
                   onClick={() => {dispatch(setType("livraison")) ;setClient({ ...client, type: "livraison" })}}
                 >
                   Livraison
-                </Button>
+                </Button>:""}
+               
                 <Button
                   size="lg"
                   variant={
@@ -713,8 +716,7 @@ if(client.type!="surplace")
                           <Typeahead
                             onInputChange={(e) => {
                               setClient({ ...client, phone: e });
-                              setOld(false);
-                              setshowHistory(false);
+                              
                             }}
                             onChange={(e) => {
                               handleSelection(e[0]);

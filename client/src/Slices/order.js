@@ -8,7 +8,7 @@ const initialState = {
   client: {},
   nbrCouverts: 0,
   remarque: "",
-  orderType:"emporter"
+  orderType:"surplace"
 };
 
 

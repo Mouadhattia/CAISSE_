@@ -38,6 +38,7 @@ const Menu = () => {
   function handleShow() {
     setShows(true);
   }
+
   const selectedTable = useSelector((state) => state.order.selectedTable);
   const params = useParams();
   const user_id = localStorage.getItem("user_id");
@@ -176,7 +177,7 @@ const Menu = () => {
             }}
           >
              
-            <b>Recherecher</b>
+            <b>Rechercher</b>
             <FontAwesomeIcon icon={faSearch}  style={{marginLeft:"0.5rem"}} />
             </h6>
           </div>
@@ -256,7 +257,7 @@ const Menu = () => {
           <div className="modal-heade">
             <div className="input-search-product" >
               
-              <input type="text" placeholder="Chercher un produit..."  value={filter}/>
+              <input type="text" placeholder="Rehercher un produit..."  value={filter}/>
               <FontAwesomeIcon icon={faSearch} className="Sm" />
             </div>
 
