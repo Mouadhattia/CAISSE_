@@ -48,8 +48,8 @@ const Tables = ({ selectedZone }) => {
     setShowModal(false);
     console.log(selectedTable);
     dispatch(storeSelectedTable({ selectedTable }));
-    dispatch(initClient({ client: { type: "surplace" } }));
-    dispatch(setType("surplace"))
+    dispatch(initClient({ client: { type: "sur place" } }));
+    dispatch(setType("sur place"))
     setTimeout(() => {
       navigate("/menu");
     }, 300);

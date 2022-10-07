@@ -228,7 +228,7 @@ const History = () => {
                       </td>
                       <td style={{ display: "flex" }}>
                         {order.order_type}
-                        {order.order_type == "surplace" ? (
+                        {order.order_type == "sur place" ? (
                           <img
                             src={surplace}
                             width={32}

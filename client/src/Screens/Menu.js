@@ -249,7 +249,7 @@ const Menu = () => {
               setconfirmed={setconfirmed}
             />
           </Col>
-          <NaviBottom />
+          
         </Row>
       </div>
       {shows ? (
@@ -284,6 +284,7 @@ const Menu = () => {
       ) : (
         ""
       )}
+      <NaviBottom />
     </div>
   );
 };

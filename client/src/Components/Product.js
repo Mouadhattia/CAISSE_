@@ -41,8 +41,8 @@ const Product = ({ product, setAlert, order_id,setconfirmed,confirmed }) => {
 
   useEffect(() => {
     let tva;
-    if (client.type == "surplace" || client.type == "livraison") {
-      tva = tva_mode.find((e) => e.nom == "surplace").valeur;
+    if (client.type == "sur place" || client.type == "livraison") {
+      tva = tva_mode.find((e) => e.nom == "sur place").valeur;
       setTva(tva);
     } else if (client.type == "emporter") {
       tva = tva_mode.find((e) => e.nom == "emporter").valeur;
@@ -215,7 +215,8 @@ const Product = ({ product, setAlert, order_id,setconfirmed,confirmed }) => {
       <p>
         <b>{product.name.substring(0, 21)}</b>
       </p>
-      <img src={product.image} onClick={selectProduct} className="prod_img" />
+      {product.image!=''?<img src={product.image} onClick={selectProduct} className="prod_img" />:''}
+      
       <div className="price">
         {`${product.price.toFixed(2)}`}
         {renderHTML(`<i>${currency}</i>`)}

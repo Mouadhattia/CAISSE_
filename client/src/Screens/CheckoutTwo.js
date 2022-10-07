@@ -17,7 +17,7 @@ import Keyboard from "react-simple-keyboard";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, useNavigate, useParams } from "react-router";
 import Ticket from "../Components/Ticket";
-import { deletecheckoutData } from "../Slices/order";
+import { clearOrdersPartage, deletecheckoutData, editordersPartage, setOrderPartage, setPartNotPaid, updateReapartirItems } from "../Slices/order";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import useTranslation from "./../i18";
 import logo from "./../Shared/logo.png";
@@ -39,8 +39,7 @@ import {
   faUsers,
   faUtensils,
 } from "@fortawesome/free-solid-svg-icons";
-import { FcPaid } from "react-icons/fc";
-
+import Swal from "sweetalert2";
 const CheckoutTwo = () => {
   const [payments, setpayments] = useState([]);
   const username = localStorage.getItem("username") || [];
@@ -50,12 +49,15 @@ const CheckoutTwo = () => {
   const dispatch = useDispatch();
   const { type, part, table_id } = params;
   const ordersData = useSelector((state) => state.order.checkoutData);
+  const orderesPartage = useSelector((state) => state.order.ordersPartage);
+  const partNotPaid = useSelector((state) => state.order.partNotPaid);
   let thisOrder = ordersData.filter((o) => o.order_id == table_id)[0] || {};
+  let check=orderesPartage?.map(e=>Number(e.amountPaid)).reduce((a,b)=>a+b,0)>0;
 
   const [theseOrders, settheseOrders] = useState([]);
   const [list, setList] = useState([]);
   const [ping, setPing] = useState(true);
-  const [show, setShow] = useState(type == "repartir");
+  const [show, setShow] = useState(type=="repartir"&&!check);
   const [amount, setAmount] = useState(0);
   const [amountPaid, setamountPaid] = useState(0);
   const [note, setNote] = useState("");
@@ -67,12 +69,14 @@ const CheckoutTwo = () => {
   const [nbrCouverts, setNbrCouverts] = useState(1);
   const [accompte, setAccompte] = useState(false);
   const [oredertopay, setordertopay] = useState({});
-  const [orederpartage, setorederpartage] = useState([]);
+  const [orederpartage, P] = useState([]);
   const [orederepartir, setorederepartir] = useState([]);
+ 
 
   const [getclient, setclient] = useState(0);
+
   const onKeyPress = (button) => {
-    console.log("Button pressed", button);
+ 
     if (button == "{bksp}") {
       setkeyborad(getkeyborad.slice(0, -1));
       setAmount(Number(amount.toString().slice(0, -1)));
@@ -129,7 +133,7 @@ const CheckoutTwo = () => {
      
       if (selected == "pay") {
         let v = numberFromLocaleString(input, "fr");
-        console.log(v);
+      
         setAmount(v);
 
         /*    setkeyborad(v); */
@@ -177,7 +181,7 @@ const CheckoutTwo = () => {
     tvas = 20;
   } else {
     switch (thisOrder.orderType) {
-      case "surplace":
+      case "sur place":
         tvas = 10;
         break;
       case "emporter":
@@ -191,52 +195,210 @@ const CheckoutTwo = () => {
         break;
     }
   }
-  useEffect(() => {}, [partageorder]);
+  ////jdid////
+  
+  const handlefinish = ()=>{
+    setShow(false)
+let nbr=orderesPartage.filter(e=>e.amount==0).length
+dispatch(setPartNotPaid(partNotPaid-nbr))
+  }
+  useEffect(() => {
+  if(type == "partager"){
+    let partageorder = []
+    for (let i = 1; i <= part; i++){
+      let ids = Math.floor((1 + Math.random()) * 0x10000)
+      partageorder=[...partageorder,{
+        ...thisOrder,
+        totalPrice: (thisOrder.totalPrice/part).toFixed(2),
+        partId : ids,
+        amount: (thisOrder.totalPrice/part).toFixed(2),
+        amountPaid: 0,
+        payments:[]
+       }]
+   
+    }
+    if(orderesPartage.length==0){
+      dispatch(setOrderPartage(partageorder))
+    }
+  }else if (type == "repartir"){
+    let items = [];
+    thisOrder.orderItems.map(e=>{
+        for(let i=1;i<=e.qt;i++){
+          let ids = Math.floor((1 + Math.random()) * 0x10000)
+          items = [...items,{...e,repatirId:ids}]
+        }
+    })
+    
+   
+    //////////////////////////////////////////
+
+    let repartirOrder = []
+    for (let i = 1; i <= part; i++){
+      let ids = Math.floor((1 + Math.random()) * 0x10000)
+      repartirOrder=[...repartirOrder,{
+        ...thisOrder,
+        totalPrice: 0,
+        partId : ids,
+        amount: 0,
+        amountPaid: 0,
+        payments:[],
+        orderItems:[]
+       }]
+   
+    }
+    if(orderesPartage.length==0){
+      repartirOrder[0]={...repartirOrder[0],orderItems:[...items],totalPrice:thisOrder.totalPrice,amount:thisOrder.totalPrice}
+      dispatch(setOrderPartage(repartirOrder))
+     
+    }
+/////////////////////////    
+    
+  }
+  
+ 
+  
+ 
+ 
+
+  
+  }, [])
+  const handleprint = (order)=>{
+
+    axios.post(
+      process.env.REACT_APP_API_HOST +
+        ":" +
+        process.env.REACT_APP_API_PORT +
+        "/api/printorder",
+      {
+        order: {
+          ...order,
+          message: note,
+        },
+      user_id:user_id
+      }
+    )
+  }
 
   useEffect(() => {
-    if (type == "partager" || "repartir") {
-      let newOrders = [];
-      var i = 0;
-      var t = [];
-      thisOrder?.orderItems?.forEach((element) => {
-        const newObj = Object.assign({ ids: i }, element);
-      
-        t.push(newObj);
-        i++;
-      });
-      console.log(t);
-      let listData = [t];
-      console.log(part);
-      let vs = [];
-      var ids;
-      for (let i = 1; i <= part; i++) {
-        newOrders.push({
-          ...thisOrder,
-          totalPrice: thisOrder.totalPrice,
-          taxPrice: (thisOrder?.totalPrice * tvas) / 100,
-          part: part,
-          type: type,
-          client: i,
-          ids: i,
-        });
-        if (type == "partager") {
-          vs.push(
-            (thisOrder.totalPrice + (thisOrder?.totalPrice * tvas) / 100) / part
-          );
-        }
-      }
-      localStorage.setItem("partageorder", partageorder);
-      setorederpartage(vs);
-
-      for (let i = 1; i < part; i++) {
-        listData = [...listData, []];
-      }
-      setList(listData);
-      console.log(listData);
-      settheseOrders(newOrders);
-      console.log(newOrders);
+    let totalamount = orderesPartage?.map(e=>Number(e.amount)).reduce((a,b)=>a+b,0)
+    let totalamountPaid = orderesPartage?.map(e=>Number(e.amountPaid)).reduce((a,b)=>a+b,0)
+ if(partNotPaid==0){
+  axios
+  .post(
+    process.env.REACT_APP_API_HOST +
+      ":" +
+      process.env.REACT_APP_API_PORT +
+      "/api/finalizeorder",
+    {
+      order: {
+        ...thisOrder,
+        message: note,
+        pay_method: paymentType,
+        amount:  totalamountPaid,
+        amountPaid: totalamount,
+      },
     }
-  }, []);
+  )
+  .then((res) => {
+    Swal.fire({
+      icon: "success",
+      title: "Le paiement effectué avec succès",
+      showConfirmButton: false,
+      timer: 1000,
+    });
+    handleExit()
+    dispatch(clearOrdersPartage())
+   })
+ 
+ }
+  }, [partNotPaid])
+  
+const handlePayment =()=>{
+
+  setordertopay({...oredertopay,amountPaid:oredertopay.amountPaid+amount,amount:(oredertopay.amount-amount).toFixed(2),payments:[...oredertopay.payments,{type:paymentType,value:amount}]})
+  dispatch(editordersPartage({...oredertopay,amountPaid:oredertopay.amountPaid+amount,amount:(oredertopay.amount-amount).toFixed(2),payments:[...oredertopay.payments,{type:paymentType,value:amount}]}))
+  setAmount(0)
+  const orderToPrint ={
+    ...oredertopay,
+    amountPaid:oredertopay.amountPaid+amount,
+    amount:oredertopay.amount-amount,
+    payments:[...oredertopay.payments,{type:paymentType,value:amount}],
+    nbrCouverts: nbrCouverts,
+    message: note,
+    pay_method: paymentType,
+  }
+  if(orderToPrint.amount<=orderToPrint.amountPaid){
+    let newPayment = orderToPrint.payments.map(e=>{
+       return {amount: e.value,pay_method:e.type}
+       
+    })
+
+  setShowPay(false)
+    axios
+        .post(
+          process.env.REACT_APP_API_HOST +
+            ":" +
+            process.env.REACT_APP_API_PORT +
+            "/api/printFinalOrder",
+          {
+            user_id: user_id,
+            order: {...orderToPrint,payments:newPayment},
+            type: "payertout",
+          }
+        ).catch((err) => console.log(err));
+
+  }
+  
+}
+
+
+  //////////////////////////////////
+
+  // useEffect(() => {
+   
+  //   if (type == "partager" || "repartir") {
+  //     let newOrders = [];
+  //     var i = 0;
+  //     var t = [];
+  //     thisOrder?.orderItems?.forEach((element) => {
+  //       const newObj = Object.assign({ ids: i }, element);
+      
+  //       t.push(newObj);
+  //       i++;
+  //     });
+     
+  //     let listData = [t];
+     
+  //     let vs = [];
+  //     var ids;
+  //     for (let i = 1; i <= part; i++) {
+  //       newOrders.push({
+  //         ...thisOrder,
+  //         totalPrice: thisOrder.totalPrice,
+  //         taxPrice: (thisOrder?.totalPrice * tvas) / 100,
+  //         part: part,
+  //         type: type,
+  //         client: i,
+  //         ids: i,
+  //       });
+  //       if (type == "partager") {
+  //         vs.push(
+  //           (thisOrder.totalPrice + (thisOrder?.totalPrice * tvas) / 100) / part
+  //         );
+  //       }
+  //     }
+  //     localStorage.setItem("partageorder", partageorder);
+  //     P(vs);
+
+  //     for (let i = 1; i < part; i++) {
+  //       listData = [...listData, []];
+  //     }
+  //     setList(listData);
+  
+  //     settheseOrders(newOrders);
+   
+  //   }
+  // }, []);
   const user_id = localStorage.getItem("user_id");
 
   const handleExit = () => {
@@ -388,7 +550,7 @@ const CheckoutTwo = () => {
         }
       )
       .then((res) => {
-        console.log(res.data);
+       
         dispatch(deletecheckoutData({ table_id: table_id }));
         navigate("/main");
       })
@@ -406,7 +568,7 @@ const CheckoutTwo = () => {
 
     return result;
   };
-
+  
   const move = (source, destination, droppableSource, droppableDestination) => {
     const sourceClone = Array.from(source);
     const destClone = Array.from(destination);
@@ -442,70 +604,53 @@ const CheckoutTwo = () => {
   });
 
   function onDragEnd(result) {
-    const { source, destination } = result;
-
+   
+     dispatch(updateReapartirItems(result))
     // dropped outside the list
-    if (!destination) {
-      return;
-    }
-    const sInd = +source.droppableId;
-    const dInd = +destination.droppableId;
-
-    if (sInd === dInd) {
-      const items = reorder(list[sInd], source.index, destination.index);
-      const newState = [...list];
-      newState[sInd] = items;
-      setList(newState);
-    } else {
-      const result = move(list[sInd], list[dInd], source, destination);
-      const newState = [...list];
-      newState[sInd] = result[sInd];
-      newState[dInd] = result[dInd];
-      setList(newState);
-    }
+    
   }
 
-  const handleRepart = () => {
-    let copy = theseOrders.map((order, key) => ({
-      ...order,
-      orderItems: [...list[key]],
-    }));
+  // const handleRepart = () => {
+  //   let copy = theseOrders.map((order, key) => ({
+  //     ...order,
+  //     orderItems: [...list[key]],
+  //   }));
 
-    var repatir = [];
-    var tax = [];
-    var sums = [];
-    for (let indexs = 0; indexs < copy.length; indexs++) {
-      const element = copy[indexs];
-      console.log(element);
-      let sum = 0;
-      let sum2 = 0;
-      let tva = 0;
-      for (let index1 = 0; index1 < element.orderItems.length; index1++) {
-        const element1 = element.orderItems[index1];
-        sum = sum + element1.price + (element1.tva / 100) * element1.price;
-        sum2 = sum2 + element1.price;
-        tva = tva + (element1.tva / 100) * element1.price;
-      }
-      repatir.push(sum);
-      tax.push(tva);
-      sums.push(sum2);
-    }
+  //   var repatir = [];
+  //   var tax = [];
+  //   var sums = [];
+  //   for (let indexs = 0; indexs < copy.length; indexs++) {
+  //     const element = copy[indexs];
+     
+  //     let sum = 0;
+  //     let sum2 = 0;
+  //     let tva = 0;
+  //     for (let index1 = 0; index1 < element.orderItems.length; index1++) {
+  //       const element1 = element.orderItems[index1];
+  //       sum = sum + element1.price + (element1.tva / 100) * element1.price;
+  //       sum2 = sum2 + element1.price;
+  //       tva = tva + (element1.tva / 100) * element1.price;
+  //     }
+  //     repatir.push(sum);
+  //     tax.push(tva);
+  //     sums.push(sum2);
+  //   }
 
-    setorederpartage(repatir);
+  //   P(repatir);
    
-    var y = [];
-    for (let index = 0; index < repatir.length; index++) {
-      const element = repatir[index];
-      const newObj = Object.assign({ pricepart: element }, copy[index]);
-      newObj.totalPrice = sums[index];
-      newObj.taxPrice = tax[index];
-      y.push(newObj);
-    }
-    settheseOrders(y);
+  //   var y = [];
+  //   for (let index = 0; index < repatir.length; index++) {
+  //     const element = repatir[index];
+  //     const newObj = Object.assign({ pricepart: element }, copy[index]);
+  //     newObj.totalPrice = sums[index];
+  //     newObj.taxPrice = tax[index];
+  //     y.push(newObj);
+  //   }
+  //   settheseOrders(y);
 
-    handleClose();
-    setPing(!ping);
-  };
+  //   handleClose();
+  //   setPing(!ping);
+  // };
   return (
     <div
       style={{
@@ -525,7 +670,7 @@ const CheckoutTwo = () => {
             </div>
           </Navbar.Brand>
           <Nav className="ms-auto">
-            <Nav.Link onClick={() => navigate("/main")}>
+            <Nav.Link onClick={() => {navigate("/main");dispatch(clearOrdersPartage())}}>
               <img width="45px" src={tableIcon} />
             </Nav.Link>
             <Nav.Link>
@@ -540,6 +685,20 @@ const CheckoutTwo = () => {
                 Agenda
               </h6>
             </Nav.Link>
+            {!check&&type=="repartir"?<Nav.Link>
+              <h6
+                style={{ color: "white", paddingTop: "1rem" }}
+                className="checkout-2-agenda"
+                onClick={()=>setShow(true)}
+              >
+                <FontAwesomeIcon
+                  icon={faEdit}
+                  style={{ marginRight: "5px" }}
+                />
+                Repartir
+              </h6>
+            </Nav.Link>:''}
+            
             <Nav.Link onClick={() => navigate("/cloture")}>
               <h6
                 style={{ color: "white", paddingTop: "1rem" }}
@@ -579,15 +738,15 @@ const CheckoutTwo = () => {
           </h6>
         </Container>
       </Navbar>
-      <Modal show={show}>
+      <Modal show={show} onHide={() => setShow(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Repartir</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <div style={{ display: "flex" }}>
             <DragDropContext onDragEnd={onDragEnd}>
-              {list?.map((el, ind) => (
-                <Droppable key={ind} droppableId={ind.toString()}>
+              {orderesPartage?.map((el, ind) => (
+                <Droppable key={ind} droppableId={ind?.toString()}>
                   {(provided, snapshot) => (
                     <div
                       ref={provided.innerRef}
@@ -595,10 +754,10 @@ const CheckoutTwo = () => {
                       {...provided.droppableProps}
                     >
                       <h6>{`personne ${ind + 1}`}</h6>
-                      {el.map((item, index) => (
+                      {el.orderItems.map((item, index) => (
                         <Draggable
-                          key={item.ids}
-                          draggableId={item.ids.toString()}
+                          key={item.repatirId}
+                          draggableId={item.repatirId?.toString()}
                           index={index}
                         >
                           {(provided, snapshot) => (
@@ -632,43 +791,61 @@ const CheckoutTwo = () => {
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="primary" onClick={() => handleRepart()}>
+          <Button variant="primary"  onClick={()=>handlefinish()} >
             Terminer
           </Button>
         </Modal.Footer>
       </Modal>
       <div className="co2">
-        {theseOrders?.map((order) =>
-          orederpartage[order.client - 1] != 0 ? (
-            <div className="checkout2">
-              <Ticket order={order} ping={ping} />
-              <Button
-                variant="success"
-                className="c2btn"
-                onClick={() => {
-                  setordertopay(order);
-                  setShowPay(true);
-                  console.log(order.client);
-                  console.log(getclient);
-                }}
-              >
-                impayé
-              </Button>
-            </div>
-          ) : (
-            <div className="checkout2">
-              <Ticket order={order} ping={ping} />
-              <Button
-                variant="outlined"
-                color="error"
-                className="c2btn"
-                startIcon={<FcPaid />}
-                Disabled
-              >
-                payé
-              </Button>
-            </div>
-          )
+        {orderesPartage?.map((order) =>
+     <div className="checkout2">
+     <Ticket order={order} ping={ping} />
+     {order.amount>order.amountPaid?
+     <Button
+       variant="success"
+       className="c2btn"
+       onClick={() => {
+         setordertopay(order);
+         setShowPay(true);
+        
+        
+       }}
+     >
+       Impayé
+     </Button>:
+     <Button
+       variant="disabled"
+       className="c2btn"
+     
+     >
+       Payée
+     </Button>
+    
+      }
+       <Button onClick={()=>handleprint(order)}
+       variant="primary"
+       className="c2btn"
+     
+     >
+       imprimer
+     </Button>
+     
+   </div>
+           
+          // ) : (
+          //   <div className="checkout2">
+          //     <Ticket order={order} ping={ping} />
+          //     <Button
+          //       variant="outlined"
+          //       color="error"
+          //       className="c2btn"
+          //       startIcon={<FcPaid />}
+          //       Disabled
+          //     >
+          //       payé
+          //     </Button>
+          //   </div>
+          
         )}
       </div>
       {/* <Button variant="success" onClick={() => handleFinalize()}>
@@ -687,19 +864,15 @@ const CheckoutTwo = () => {
                 <Form.Control
                   type="number"
                   placeholder="0.00"
-                  value={amountPaid}
-                  onChange={(e) => {setAmount(e.target.value)}}
+                  value={oredertopay.amountPaid}
+                  // onChange={(e) => {setAmount(e.target.value)}}
                 />
               </Form>
               <h6 style={{ marginTop: "1rem" }}>Monnaie</h6>
               <h4 style={{ color: "red" }}>
                 <b>
-                  {Number(orederpartage[oredertopay.client - 1]).toFixed(2)}
-                  {/* {(
-                    amountPaid -
-                    (oredertopay.totalPrice + oredertopay.taxPrice) /
-                      parseInt(part)
-                  ).toFixed(2)} */}
+                  {oredertopay.amount}
+               
                 </b>
               </h4>
               <Form.Group
@@ -712,7 +885,7 @@ const CheckoutTwo = () => {
                   <b>Details de paiement</b>{" "}
                 </Form.Label>
                 <div style={{ height: "150px", overflow: "auto" }}>
-                  {payments[oredertopay.client - 1]?.map((e) => (
+                  {oredertopay?.payments?.map((e) => (
                     <div
                       style={{
                         display: "flex",
@@ -734,7 +907,7 @@ const CheckoutTwo = () => {
                     type="number"
                     placeholder="0.00"
                     value={
-                      ((oredertopay.totalPrice + oredertopay.taxPrice) / part).toFixed(2)
+                      oredertopay.totalPrice
                     }
                   />
                 </Form.Group>
@@ -926,7 +1099,7 @@ const CheckoutTwo = () => {
                   onClick={() => {
                     
                     setAmount(
-                      Number((orederpartage[oredertopay.client - 1])).toFixed(2)
+                      Number(oredertopay?.amount).toFixed(2)
                     );
                     // setkeyborad(((orederpartage[oredertopay.client - 1]).toFixed(2)).toString());
                   }}
@@ -956,38 +1129,8 @@ const CheckoutTwo = () => {
           {!accompte ? (
             <Button
               variant="success"
-              onClick={() => {
-                if (amount > 0) {
-                  setamountPaid(amountPaid + amount);
-
-                  keyboard.current.setInput("");
-                  setkeyborad("0");
-                  setAmount(0);
-                  let arryofswitch = [];
-
-                  var i = 0;
-                  var c = 0;
-                  for (i = 0; i < orederpartage.length; i++) {
-                    if (oredertopay.client - 1 == i) {
-                      c = i;
-                      arryofswitch.push(
-                        (orederpartage[i] - amount).toFixed(2) <= 0
-                          ? 0
-                          : (orederpartage[i] - amount).toFixed(2)
-                      );
-                      if ((orederpartage[i] - amount).toFixed(2) <= 0) {
-                        setShowPay(false);
-                      }
-                    } else {
-                      arryofswitch.push(orederpartage[i]);
-                    }
-                  }
-                  setorederpartage(arryofswitch);
-                  handleFinal(arryofswitch, c);
-                } else {
-                  console.log("null");
-                }
-              }}
+              onClick={()=>handlePayment()}
+               
             >
               Valider
             </Button>

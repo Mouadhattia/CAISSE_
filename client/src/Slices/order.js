@@ -8,7 +8,9 @@ const initialState = {
   client: {},
   nbrCouverts: 0,
   remarque: "",
-  orderType:"surplace"
+  orderType:"sur place",
+  ordersPartage :[],
+  partNotPaid:0
 };
 
 
@@ -128,7 +130,54 @@ const orderSlice = createSlice({
     },
     setType :(state,action)=>{
       state.orderType = action.payload
+    },
+    setOrderPartage:(state,action)=>{
+  
+     state.ordersPartage= action.payload
+    
+    },
+    editordersPartage:(state,action)=>{
+      if(action.payload.amount<=0){
+        state.partNotPaid = state.partNotPaid -1
+      }
+      let i = state.ordersPartage.findIndex(
+        (order) => order.partId == action.payload.partId
+      );
+      let Copy = [...state.ordersPartage];
+      Copy[i] = action.payload;
+      state.ordersPartage = [...Copy];
+    },
+    clearOrdersPartage:(state,action)=>{
+      state.ordersPartage =[]
+    },
+    setPartNotPaid :(state,action)=>{
+      state.partNotPaid= action.payload
+    },
+    updateReapartirItems:(state,action)=>{
+      let copy = [...state.ordersPartage]
+      let disIndex =Number(action.payload.destination.droppableId)
+      let sourceIndex =Number(action.payload.source.droppableId)
+      let itemId =Number(action.payload.draggableId)
+      if(disIndex!=sourceIndex){
+        copy[disIndex]={
+          ...copy[disIndex],
+          orderItems:[...copy[disIndex].orderItems,copy[sourceIndex].orderItems.filter(el=>el.repatirId==itemId)[0]],
+          totalPrice:copy[disIndex].totalPrice+copy[sourceIndex].orderItems.filter(el=>el.repatirId==itemId)[0].price,
+          amount:copy[disIndex].totalPrice+copy[sourceIndex].orderItems.filter(el=>el.repatirId==itemId)[0].price
+        }
+        copy[sourceIndex]={
+          ...copy[sourceIndex],
+          orderItems:copy[sourceIndex].orderItems.filter(el=>el.repatirId!=itemId),
+          totalPrice: copy[sourceIndex].totalPrice-copy[sourceIndex].orderItems.filter(el=>el.repatirId==itemId)[0].price,
+          amount:copy[sourceIndex].totalPrice-copy[sourceIndex].orderItems.filter(el=>el.repatirId==itemId)[0].price
+        }
+       state.ordersPartage =[...copy]
+      }
+      
     }
+    
+
+    
   },
 });
 
@@ -150,6 +199,11 @@ export const {
   setRemarque,
   cancelOrder,
   clearData,
-  setType
+  setType,
+  setOrderPartage,
+  editordersPartage,
+  clearOrdersPartage,
+  setPartNotPaid,
+  updateReapartirItems
 } = orderSlice.actions;
 export default reducer;

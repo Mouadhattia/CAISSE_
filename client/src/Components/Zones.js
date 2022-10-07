@@ -19,6 +19,7 @@ import {
 import { useNavigate } from "react-router";
 
 const Zones = () => {
+  const ping = useSelector((state) => state.data.ping);
   const user_id = localStorage.getItem("user_id");
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ const Zones = () => {
   const zones = useSelector((state) => state.data.zones);
   const checkoutData = useSelector((state) => state.order.checkoutData);
   const [show, setShow] = useState(false);
+  
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
@@ -48,7 +50,7 @@ const Zones = () => {
         dispatch(storeTables({ tables: res.data.tables }));
         setSelectedZone(zones[0]?.id);
       });
-  }, [checkoutData]);
+  }, [checkoutData,ping]);
 
   return (
     <div>

@@ -18,7 +18,6 @@ import CheckoutTwo from "./Screens/CheckoutTwo";
 import History from "./Screens/History";
 import Clients from "./Screens/Clients";
 import CalendarScreen from "./Screens/CalendarScreen";
-
 import io from "socket.io-client";
 import { useDispatch } from "react-redux";
 import { setCheckoutChange } from "./Slices/order";
@@ -29,7 +28,45 @@ import Zcaisse from "./Screens/Zcaisse";
 
 const socket = io.connect(process.env.REACT_APP_API_SOCKET);
 function App() {
+  let today = new Date()
+  var time = today.getHours() + ":" + today.getMinutes() 
+
+
+const MINUTE_MS = 60000;
+
+useEffect(() => {
+  const interval = setInterval(() => {
+    console.log("kol d9i9a")
+    if(time =="11:55"){
+      Swal.fire({
+        icon: "success",
+        title: 
+        "<h5 >" +
+        `w9yet` +
+        "</h5>",
+        
+        showConfirmButton: false,
+        timer: 2500,
+      });
+    }
+  }, MINUTE_MS);
+
+  return () => clearInterval(interval); 
+}, [])
   
+
+  useEffect(() => {
+  
+    const unloadCallback = (event) => {
+      event.preventDefault();
+      event.returnValue = "";
+     
+    };
+  
+    window.addEventListener("beforeunload", unloadCallback);
+    return () => window.removeEventListener("beforeunload", unloadCallback);
+  }, []);
+ 
   const [soundUpdate, setSoundUpdate] = useState(new Audio(updateSound));
   const [audioBorn, setaudioBorn] = useState(new Audio(bornSound));
   const dispatch = useDispatch()

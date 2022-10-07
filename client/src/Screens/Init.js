@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Container, Form, Button, Alert, FloatingLabel } from "react-bootstrap";
 import axios from "axios";
 import { useNavigate } from "react-router";
@@ -6,9 +6,11 @@ import useTranslation from "./../i18";
 import video from "./../Shared/initbg.mp4";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import logo from "./../Shared/logo.png";
-import { faLockOpen } from "@fortawesome/free-solid-svg-icons";
+import { faEye, faEyeDropper, faEyeSlash, faLockOpen } from "@fortawesome/free-solid-svg-icons";
 import { useDispatch } from "react-redux";
 import { storeClients } from "../Slices/data";
+
+import "./Styles.css";
 const Init = () => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
@@ -18,7 +20,20 @@ const Init = () => {
     username: "",
     password: "",
   });
+  const [session, setSession] = useState(false)
+  const [showPassword, setShowPassword] = useState("password")
 
+
+  useEffect(() => {
+  let sessionActive = localStorage.getItem("session")
+  let user_id = localStorage.getItem("user_id")
+  if(sessionActive&&user_id){
+    navigate("/main")
+  }
+  
+  
+  }, [])
+  
   const submitCreds = () => {
     axios
       .post(
@@ -34,6 +49,7 @@ const Init = () => {
         console.log(res.data);
         localStorage.setItem("staff", res.data.staff);
         localStorage.setItem("user_id", res.data.user_id);
+        localStorage.setItem("session",session)
         localStorage.setItem("currency", res.data.currency);
         dispatch(storeClients({ clients: res.data.clients }));
         setAlert({ show: true, msg: t("success"), variant: "success" });
@@ -73,21 +89,23 @@ const Init = () => {
     <div className="authincation h-100 c">
       <div className="container h-100">
         <div className="row justify-content-center h-100 align-items-center">
-          <div className="col-md-6">
-            <div className="authincation-content">
-              <div className="row no-gutters">
-                <div className="col-xl-12">
-                  <div className="row">
+          <div className="col-md-6" >
+            <div className="authincation-content" >
+              <div className="row no-gutters" >
+                <div className="col-xl-12" style={{position:"relative"}} >
+                  <div className="row" >
                     <div className="col-5 mx-auto top">
                       <br />
-                      <div className="text-center ">
+                      <div className="text-center " >
                         <img
                           className="logo-compact "
                           src={logo}
                           width="100%"
                           alt=""
                         />
+                        <h1 style={{color:"red",textAlign:"center",fontSize:"small",marginTop:"1rem",fontWeight:"700",width:"100%"}} >Assistant:ILAN <br/> + 33 6 25 25 54 52</h1>
                       </div>
+
                     </div>
                   </div>
                   <div className="auth-form">
@@ -112,10 +130,13 @@ const Init = () => {
                           autocomplete="off"
                         />
                       </div>
-                      <div className="form-group">
+                      <div className="form-group" >
                         <label className="mb-1 pull-left">
                           <strong>{t("password")}</strong>
                         </label>
+                        {showPassword=="password"?<FontAwesomeIcon icon={faEye} onClick={()=>setShowPassword("text")} style={{position:"absolute",right:"4%" ,bottom:"27.5%"}} />:
+                        <FontAwesomeIcon icon={faEyeSlash} onClick={()=>setShowPassword("password")}  style={{position:"absolute",right:"4%" ,bottom:"27.5%"}}/>
+                        }
                         <input
                           onChange={(e) =>
                             setCredentials({
@@ -123,12 +144,14 @@ const Init = () => {
                               password: e.target.value,
                             })
                           }
-                          type="password"
+                          type={showPassword}
                           className="form-control"
                           placeholder="Mot de passe"
                           autocomplete="new-password"
                           v-model="User.MotDePasse"
+                          
                         />
+                       
                       </div>
                       <div className="form-row d-flex justify-content-between mt-4 mb-2">
                         <div className="form-group">
@@ -137,6 +160,7 @@ const Init = () => {
                               type="checkbox"
                               className="custom-control-input"
                               id="basic_checkbox_1"
+                              onChange={(e)=>setSession(e.target.checked)}
                             />
                             <label
                               className="custom-control-label"

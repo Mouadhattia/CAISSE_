@@ -32,6 +32,7 @@ import {
   faMapMarkerAlt,
   faPhone,
   faSignOutAlt,
+  faTimes,
   faTimesCircle,
   faUsers,
   faUtensils,
@@ -41,11 +42,14 @@ import { handle } from "express/lib/application";
 import useTranslation from "./../i18";
 import { useNavigate } from "react-router";
 import {
+  clearOrders,
   deletecheckoutData,
   initClient,
   setCheckoutChange,
   setNbrCouverts,
+  setPartNotPaid,
 } from "../Slices/order";
+import io from "socket.io-client";
 import axios from "axios";
 import NaviBottom from "../Components/NaviBottom";
 import Bat from "../Components/Bat";
@@ -56,6 +60,8 @@ import "react-simple-keyboard/build/css/index.css";
 import $ from "jquery";
 import Swal from "sweetalert2";
 import { Typeahead } from "react-bootstrap-typeahead";
+import { setPing } from "../Slices/data";
+
 
 const Checkout = () => {
   var curr = new Date();
@@ -82,6 +88,7 @@ const Checkout = () => {
     time: time,
     id:0
   });
+  const checkOutData = useSelector((state) => state.order.checkoutData || []);
   const [isavoir, setisavoir] = useState(false)
   const [showform, setshowform] = useState(false)
   const [load, setLoad] = useState(false)
@@ -90,10 +97,13 @@ const Checkout = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { table_id } = params;
+
+  const user = localStorage.getItem("username");
   console.log(params);
   const ordersData = useSelector((state) => state.order.checkoutData);
   const selectedTable = useSelector((state) => state.order.selectedTable);
   const client = useSelector((state) => state.order.client);
+  const ping = useSelector((state) => state.data.ping);
   const clients = useSelector((state) => state.data.clients);
   console.log(ordersData);
   let thisOrder = ordersData.filter((o) => o.order_id == table_id)[0] || {};
@@ -103,6 +113,7 @@ const Checkout = () => {
     thisOrder = {
       ...thisOrder,
       totalPrice: thisOrder.price,
+      tvas:[{perc:thisOrder.tva}]
     };
   }
   let orderDate = new Date(
@@ -113,6 +124,8 @@ const Checkout = () => {
   var curr_year = orderDate?.getFullYear();
   var curr_hour = orderDate?.getHours();
   var curr_min = orderDate?.getMinutes();
+  
+    
   const [show, setShow] = useState(false);
   const [showtwo, setshowtwo] = useState(false)
   const [old, setOld] = useState(false);
@@ -133,7 +146,115 @@ const Checkout = () => {
   const [coupon, setCoupon] = useState("");
   const [payments, setpayments] = useState([]);
   const user_id = localStorage.getItem("user_id");
+  
+
+  const handleAnnuler = () => {
+    Swal.fire({
+      title: "Motif d'annulation ",
+      showDenyButton: true,
+      showCancelButton: true,
+      confirmButtonText: "Aucun",
+      denyButtonText: `Impayé`,
+      cancelButtonText: "Fermer",
+    }).then((result) => {
+    
+
+      /* Read more about isConfirmed, isDenied below */
+      if (result.isConfirmed) {
+      
+          axios.post(
+            process.env.REACT_APP_API_HOST +
+            ":" +
+            process.env.REACT_APP_API_PORT +
+            "/api/cancelorder",
+            {
+              order: thisOrder,
+            }
+          ).then(()=>dispatch(setPing(!ping)));
+          const socket = io.connect(process.env.REACT_APP_API_SOCKET);
+          socket.emit(`accept${user_id}`, {
+            order: {
+              ...thisOrder
+
+            },
+          });
+
+          dispatch(setCheckoutChange({order:{...this,status:"rejected",timeRejection:time,rejectedFrom:username,rejected:"Aucun"} }));
+      
+        axios.post(
+          process.env.REACT_APP_API_HOST +
+          ":" +
+          process.env.REACT_APP_API_PORT +
+          "/api/pushlog",
+          {
+            user_id: user_id,
+            user: user,
+            faire: "Aucun",
+            title: "Annulation",
+            content: "Annulation de commande par le serveur",
+          }
+        );
+        Swal.fire({
+          icon: "success",
+          title: "Annulé (Aucun)",
+          showConfirmButton: false,
+          timer: 1000,
+        });
+
+        dispatch(clearOrders());
+        navigate("/main");
+      } else if (result.isDenied) {
+    
+          axios.post(
+            process.env.REACT_APP_API_HOST +
+            ":" +
+            process.env.REACT_APP_API_PORT +
+            "/api/cancelorder",
+            {
+              order: thisOrder,
+            }
+          ).then(()=>dispatch(setPing(!ping)));
+          const socket = io.connect(process.env.REACT_APP_API_SOCKET);
+          socket.emit(`accept${user_id}`, {
+            order: {
+              ...thisOrder
+
+            },
+          });
+
+
+          dispatch(setCheckoutChange({order:{...thisOrder,status:"rejected",timeRejection:time,rejectedFrom:username,rejected:"Impayé"} }));
+        
+      
+
+
+        axios.post(
+          process.env.REACT_APP_API_HOST +
+          ":" +
+          process.env.REACT_APP_API_PORT +
+          "/api/pushlog",
+          {
+            user_id: user_id,
+            user: user,
+            faire: "Impayé",
+            title: "Annulation",
+            content: "Annulation de commande par le serveur",
+          }
+        );
+
+        Swal.fire({
+          icon: "success",
+          title: "Annulé (Impayé)",
+          showConfirmButton: false,
+          timer: 1000,
+        });
+        dispatch(clearOrders());
+        navigate("/main");
+      }
+    });
+  };
  const handlefinal=(id)=>{
+ 
   setisavoir(true)
   thisOrder={...thisOrder,client_id:id,customer_name:clientone.name,customer_tel:client.phone}
     axios
@@ -166,8 +287,8 @@ const Checkout = () => {
         if (
           amountPaid + amount >=
           (
-            thisOrder?.totalPrice +
-            (thisOrder?.totalPrice * tvas) / 100
+            thisOrder?.totalPrice 
+            
           ).toFixed(2)
         ) 
           handleExit();
@@ -266,7 +387,7 @@ handlefinal(res.data.id);
         ? thisOrder.order_type
         : thisOrder.orderType
     ) {
-      case "surplace":
+      case "sur place":
         tvas = 10;
         break;
       case "sur place":
@@ -347,13 +468,13 @@ handlefinal(res.data.id);
 
   // let tax = (thisOrder.taxPrice * thisOrder.totalPrice) / 100;
   const handleFinal = () => {
-    let restAvoir = (amount- (thisOrder?.totalPrice +
-      (thisOrder?.totalPrice * tvas) / 100)).toFixed(2)
-      console.log(restAvoir)
+    let restAvoir = (amount- (thisOrder?.totalPrice 
+      )).toFixed(2)
+      
     if(restAvoir>0)
     {
       Swal.fire({
-        title: "Comment voulez-vous rendre la monnaies ?",
+        title: "Comment voulez-vous rendre "+"<b style='color:red'>"+restAvoir+currency+"</b>"+" ?",
         showDenyButton: true,
         showCancelButton: false,
         confirmButtonText: "Avoir",
@@ -391,8 +512,8 @@ handlefinal(res.data.id);
               if (
                 amountPaid + amount >=
                 (
-                  thisOrder?.totalPrice +
-                  (thisOrder?.totalPrice * tvas) / 100
+                  thisOrder?.totalPrice 
+                  
                 ).toFixed(2)
               ) {
                 handleExit();
@@ -464,10 +585,7 @@ else if(reso.isConfirmed)
           }
         )
         .then((res) => {
-          console.log(res.data);
-             
-          console.log(amount);
-          console.log(amountPaid);
+      
           setpayments([...payments, { type: paymentType, value: amount }]);
           let paid = ["Glovo", "Just-Eat", "Deliveroo", "Uber Eats","ticket restaurant"].includes(
             paymentType
@@ -476,8 +594,9 @@ else if(reso.isConfirmed)
             if (
               amountPaid + amount >=
               (
-                thisOrder?.totalPrice +
-                (thisOrder?.totalPrice * tvas) / 100
+                thisOrder?.totalPrice 
+                
+                
               ).toFixed(2)
             ) {
               handleExit();
@@ -493,9 +612,10 @@ else if(reso.isConfirmed)
     
   };
   const handleAddition = () => {
-    console.log("called");
+    dispatch(setPartNotPaid(part))
     handleClose();
     if (part > 1) {
+
       axios
         .post(
           process.env.REACT_APP_API_HOST +
@@ -535,7 +655,7 @@ else if(reso.isConfirmed)
       tva = 20;
     } else {
       switch (thisOrder.orderType) {
-        case "surplace":
+        case "sur place":
           tva = 10;
           break;
         case "emporter":
@@ -599,11 +719,11 @@ else if(reso.isConfirmed)
               Date: new Date(),
               amount:
                 amount >=
-                thisOrder?.totalPrice +
-                  ((thisOrder?.totalPrice * tvas) / 100).toFixed(2)
+                thisOrder?.totalPrice 
+                 
                   ? (
-                      thisOrder?.totalPrice +
-                      (thisOrder?.totalPrice * tvas) / 100
+                      thisOrder?.totalPrice 
+                      
                     ).toFixed(2) - amountPaid
                   : amount - amountPaid,
               amountPaid: amount,
@@ -614,10 +734,10 @@ else if(reso.isConfirmed)
         .then((res) => console.log(res.data))
         .catch((err) => console.log(err));
     }
-    let restAvoir = (amount- (thisOrder?.totalPrice +
-      (thisOrder?.totalPrice * tvas) / 100)).toFixed(2)
+    let restAvoir = (amountPaid +amount- thisOrder?.totalPrice 
+      ).toFixed(2)
      
-      let amountss = amount.toFixed(2)
+      let amountss = (amountPaid+amount).toFixed(2)
       if (paymentType=="ticket restaurant"||isavoir==true)
       {
         Swal.fire({
@@ -854,7 +974,7 @@ else if(reso.isConfirmed)
                     <b>{thisDate}</b>
                   </h6>
                 
-                  {thisOrder.orderType=="surplace"&&  <h6 className="checkout-tbd">
+                  {thisOrder.orderType=="sur place"&&  <h6 className="checkout-tbd">
                     <FontAwesomeIcon
                       icon={faUtensils}
                       style={{ color: "#ff6b6b", marginRight: "1rem" }}
@@ -953,7 +1073,7 @@ else if(reso.isConfirmed)
                             fontWeight: "bold",
                           }}
                         >
-                          {thisOrder?.totalPrice?.toFixed(2)}{" "}
+                          {(thisOrder?.totalPrice/(1+(thisOrder?.tvas[0]?.perc/100))).toFixed(2)}{" "}
                           {renderHTML(`<i>${currency}</i>`)}
                         </span>
                       </td>
@@ -977,7 +1097,7 @@ else if(reso.isConfirmed)
                             fontWeight: "bold",
                           }}
                         >
-                          {((thisOrder?.totalPrice * tvas) / 100).toFixed(2)}
+                          {(thisOrder?.totalPrice/(1+(thisOrder?.tvas[0].perc/100))*thisOrder?.tvas[0].perc/100).toFixed(2)}
                           {renderHTML(`<i>${currency}</i>`)}
                         </span>
                       </td>
@@ -1002,8 +1122,7 @@ else if(reso.isConfirmed)
                         >
                           {" "}
                           {(
-                            thisOrder?.totalPrice +
-                            (thisOrder?.totalPrice * tvas) / 100
+                            thisOrder?.totalPrice                            
                           )?.toFixed(2)}{" "}
                           {renderHTML(`<i>${currency}</i>`)}
                         </span>
@@ -1048,10 +1167,10 @@ else if(reso.isConfirmed)
             <Row>
               <Col xs={4} style={{ borderRight: "1px solid black" }}>
                 <h5>
-                  <FontAwesomeIcon
-                    icon={faUsers}
-                    style={{ color: "#ff6b6b", marginRight: "0.5rem" }}
-                  />
+                    <FontAwesomeIcon
+                      icon={faUsers}
+                      style={{ color: "#ff6b6b", marginRight: "0.5rem" }}
+                    />
                   <b>Nombre de parts :</b>
                 </h5>
                 <div
@@ -1150,9 +1269,9 @@ else if(reso.isConfirmed)
             ;
           </Modal.Body>
           <Modal.Footer>
-          <Button variant="secondary" onClick={()=>navigate('/main')}>
-              Annuler
-            </Button>
+          <Button variant="warning" onClick={handleAnnuler}>
+            {t("cancel")}
+          </Button>
             <Button variant="secondary" onClick={handleClose}>
               Fermer
             </Button>
@@ -1169,9 +1288,15 @@ else if(reso.isConfirmed)
         <Modal show={showPay} onHide={() => setShowPay(false)}>
         {showform?
         <div className="trans_client" >
+          
                    <div className="client_forms">
+                     
+                
+                   
                    <Form auto>
+                  
                     <Form.Group className="mb-3">
+                   
                       <Row>
                         <Col>
                           <Form.Control
@@ -1255,9 +1380,15 @@ else if(reso.isConfirmed)
                       </Row>
                     </Form.Group>
                   </Form>  
-        <Button onClick={()=>handleCreate()}>
+                  <div className="cli_buttons">
+                  <Button onClick={()=>handleCreate()}>
           Valider
         </Button>
+        <Button variant="danger"  style={{marginLeft:"1rem"}} onClick={()=>setshowform(false)}>
+          annuler
+        </Button>
+                  </div>
+      
                    </div>
              
         </div>     
@@ -1311,9 +1442,12 @@ else if(reso.isConfirmed)
           
                    
                   </Form>  
-        <Button onClick={()=>handleCreate()}>
+        <div className="cli_buttons"><Button onClick={()=>handleCreate()}>
           Valider
         </Button>
+        <Button variant="danger"  style={{marginLeft:"1rem"}} onClick={()=>setshowtwo(false)}>
+          annuler
+        </Button></div>
                    </div>
              
         </div>     
@@ -1355,9 +1489,7 @@ else if(reso.isConfirmed)
                   <b style={{ display: "flex" }}>
                     {" "}
                     {(
-                      thisOrder?.totalPrice +
-                      (thisOrder?.totalPrice * tvas) / 100 -
-                      amountPaid
+                      thisOrder?.totalPrice  - amountPaid
                     ).toFixed(2)}
                     {renderHTML(`<i>${currency}</i>`)}
                   </b>
@@ -1419,8 +1551,8 @@ else if(reso.isConfirmed)
                       type="number"
                       placeholder="0.00"
                       value={(
-                        thisOrder.totalPrice +
-                        (thisOrder?.totalPrice * tvas) / 100
+                        thisOrder.totalPrice 
+                        
                       ).toFixed(2)}
                     />
                   </Form.Group>
@@ -1616,17 +1748,10 @@ else if(reso.isConfirmed)
                     paddingLeft: "2rem",
                   }}
                   onClick={() => {
-                    setAmount(
-                      (
-                        thisOrder?.totalPrice +
-                        (thisOrder?.totalPrice * tvas) / 100
-                      ).toFixed(2) - amountPaid
-                    );
+                    setAmount(( thisOrder?.totalPrice ).toFixed(2) - amountPaid );
                     keyboard.current.setInput(
                       String(
-                        thisOrder?.totalPrice +
-                          (thisOrder?.totalPrice * tvas) / 100 -
-                          amountPaid
+                        thisOrder?.totalPrice -amountPaid
                       )
                     );
                   }}

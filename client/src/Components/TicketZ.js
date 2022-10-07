@@ -111,13 +111,13 @@ const TicketZ = ({ data, recap, selectedDate, products, tvas , tvasum}) => {
           <p>
             <b>Total HT</b>
           </p>
-          <p>{recap.today?.total.toFixed(2)}€</p>
+          <p>{(recap.today?.total-tvasum).toFixed(2)}€</p>
         </div>
         <div className="b_el">
           <p>
             <b>Total TTC</b>
           </p>
-          <p>{(recap.today?.total +tvasum).toFixed(2)}€</p>
+          <p>{(recap.today?.total ).toFixed(2)}€</p>
         </div>
         <p>---------------------------------</p>
         <div className="b_el">
@@ -133,8 +133,8 @@ const TicketZ = ({ data, recap, selectedDate, products, tvas , tvasum}) => {
           <p>
             {(
               recap.lastOuverture?.montant +
-              recap.today?.total +
-              tvasum 
+              recap.today?.total 
+             
             ).toFixed(2)}
             €
           </p>

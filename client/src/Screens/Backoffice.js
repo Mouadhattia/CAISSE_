@@ -217,6 +217,7 @@ const History = () => {
         <div className="B_header">
        
             <select name="" id="b_office_select"  onChange={(e)=>{setstoreid(e.target.value) }} >
+            <option  value="">Voirs tous</option>
              {categories.map((e,key)=><option  key={key} value={e.id}>{e.name}</option>)} 
             </select>
          

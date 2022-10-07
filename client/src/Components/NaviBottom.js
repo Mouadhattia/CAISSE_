@@ -213,7 +213,7 @@ const NaviBottom = () => {
   //       })
   //       .catch((err) => console.log(err));
   //   }
-  //   if (client?.type == "surplace") {
+  //   if (client?.type == "sur place") {
   //     console.log(table(Table_nbr).id);
   //     dispatch(
   //       storeSelectedTable({
@@ -267,7 +267,7 @@ const NaviBottom = () => {
     } else {
       dispatch(initClient({ client }));
     }
-    if (client.type == "surplace") {
+    if (client.type == "sur place") {
       
     if (Table_nbr==0)
     {
@@ -292,7 +292,7 @@ const NaviBottom = () => {
       navigate("/menu");
     }     
     }
-if(client.type!="surplace")
+if(client.type!="sur place")
 {
   handleClose();
     navigate("/menu");
@@ -409,7 +409,7 @@ if(client.type!="surplace")
                 }}
                 className="nav-buttom-button"
               >
-                Encours<Badge bg="danger"> {enCours}</Badge>
+                En cours<Badge bg="danger"> {enCours}</Badge>
               </Button>
             </Nav.Link>
             <Nav.Link>
@@ -621,10 +621,10 @@ if(client.type!="surplace")
                 <Button
                   size="lg"
                   variant={
-                    client?.type == "surplace" ? "light" : "outline-warning"
+                    client?.type == "sur place" ? "light" : "outline-warning"
                   }
                   style={{ borderColor: "#ff6b6b", color: "#ff6b6b" }}
-                  onClick={() => {dispatch(setType("surplace"))  ;setClient({ ...client, type: "surplace" })}}
+                  onClick={() => {dispatch(setType("sur place"))  ;setClient({ ...client, type: "sur place" })}}
                 >
                   sur place
                 </Button>

@@ -9,7 +9,8 @@ import aprc from "./../Shared/aprc.png";
 const Ticket = ({ order, thisDate, ping }) => {
   const address = localStorage.getItem("address");
   const user_id = localStorage.getItem("user_id");
-  console.log(order);
+  
+
   const params = useParams();
   const { table_id } = params;
   const telephone = localStorage.getItem("telephone");
@@ -31,7 +32,7 @@ const Ticket = ({ order, thisDate, ping }) => {
     axios
       .post("/api/getRestaurantData", { user_id })
       .then((res) => {
-        console.log(res.data);
+       
         setrestaurant(res.data);
       })
       .catch((err) => {
@@ -43,9 +44,9 @@ const Ticket = ({ order, thisDate, ping }) => {
     settoShowOrder(order);
   }, [order]);
 
-  console.log(restaurant);
 
-  console.log(toShowOrder);
+
+  
   
   var groupBy = function (xs, key) {
     return xs.reduce(function (rv, x) {
@@ -55,15 +56,15 @@ const Ticket = ({ order, thisDate, ping }) => {
   };
 
   let tvass = groupBy(toShowOrder?.tvas || [], "perc");
-  console.log(tvass);
+
 
   const calcOrder = (order) => {
     let price = order.price;
     let tva = order.tva;
     if (order.extras && order.extras.length) {
-      console.log("has extra");
+    
       order.extras.map((extra) => {
-        console.log(extra.price, extra.default_quantity);
+     
         price += extra.price * extra.default_quantity;
       });
     }
@@ -91,9 +92,6 @@ const Ticket = ({ order, thisDate, ping }) => {
   } else {
     let is = order.orderType == undefined ? order.order_type : order.orderType;
     switch (is) {
-      case "surplace":
-        tva = 10;
-        break;
       case "sur place":
         tva = 10;
         break;
@@ -242,7 +240,7 @@ const Ticket = ({ order, thisDate, ping }) => {
               }}
             >
               <p>
-                {toShowOrder?.totalPrice} {renderHTML(`<i>${currency}</i>`)}
+                {(toShowOrder?.totalPrice /(1+tva/100)).toFixed(2)} {renderHTML(`<i>${currency}</i>`)}
               </p>
             </div>
           </div>
@@ -264,7 +262,7 @@ const Ticket = ({ order, thisDate, ping }) => {
             </div>
           ))} */}
           {
-            (console.log(tva),
+            (
             (
               <div className="ticket_item ticket_last">
                 <p>
@@ -280,7 +278,7 @@ const Ticket = ({ order, thisDate, ping }) => {
                   }}
                 >
                   <p>
-                    {((toShowOrder?.totalPrice * tva) / 100).toFixed(2)}
+                    {((toShowOrder?.totalPrice /(1+tva/100))*tva/100).toFixed(2)}
                     {renderHTML(`<i>${currency}</i>`)}
                   </p>
                 </div>
@@ -314,10 +312,9 @@ const Ticket = ({ order, thisDate, ping }) => {
               }}
             >
               <p>
-                {(
-                  toShowOrder?.totalPrice +
-                  (toShowOrder?.totalPrice * tva) / 100
-                ).toFixed(2)}
+                {
+                  toShowOrder?.totalPrice 
+                }
                 {renderHTML(`<i>${currency}</i>`)}
               </p>
             </div>
@@ -349,8 +346,7 @@ const Ticket = ({ order, thisDate, ping }) => {
                   (acc, curr) => acc + curr.amount,
                   0
                 ) -
-                  (toShowOrder?.totalPrice +
-                    (toShowOrder?.totalPrice * tva) / 100) >
+                  (toShowOrder?.totalPrice ) >
                 0 ? (
                   <>
                     <p>Rendre monnaie</p>
@@ -367,8 +363,7 @@ const Ticket = ({ order, thisDate, ping }) => {
                             (acc, curr) => acc + curr.amount,
                             0
                           ) -
-                          (toShowOrder?.totalPrice +
-                            (toShowOrder?.totalPrice * tva) / 100)
+                          (toShowOrder?.totalPrice )
                         )?.toFixed(2)}
                         {renderHTML(`<i>${currency}</i>`)}
                       </p>
@@ -391,9 +386,9 @@ const Ticket = ({ order, thisDate, ping }) => {
                               (acc, curr) => acc + curr.amount,
                               0
                             ) -
-                            (toShowOrder?.totalPrice +
-                              (toShowOrder?.totalPrice * tva) / 100)
-                          )?.toFixed(2)
+                            toShowOrder?.totalPrice 
+                              
+                          ).toFixed(2)
                         )}
                         {renderHTML(`<i>${currency}</i>`)}
                       </p>
@@ -407,10 +402,8 @@ const Ticket = ({ order, thisDate, ping }) => {
             <b>
               {toShowOrder?.part && toShowOrder?.type == "partager" ? (
                 <p style={{ display: "flex" }}>
-                  {`Votre part pour 1/${toShowOrder?.part} personnes est : ${(
-                    (toShowOrder?.totalPrice +
-                      (toShowOrder?.totalPrice * tva) / 100) /
-                    toShowOrder.part
+                  {`Votre part pour 1/${toShowOrder?.part} personnes est : ${
+                    (toShowOrder?.totalPrice /toShowOrder.part
                   ).toFixed(2)}
               `}
                   {renderHTML(`<i>${currency}</i>`)}

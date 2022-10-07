@@ -110,7 +110,7 @@ const Cloture = () => {
       borne:0
     }
     completd.map(e=>{
-      if(e.order_type=="surplace"){
+      if(e.order_type=="sur place"){
         return orderTypes.surPlace +=1
       }
       if(e.order_type=="emporter"){
@@ -280,7 +280,7 @@ useEffect(() => {
 
   useEffect(async () => {
  
-    console.log(selectedDate);
+    
     await axios
       .post(
         process.env.REACT_APP_API_HOST +
@@ -290,7 +290,7 @@ useEffect(() => {
         { user_id, caisse_id, TODAY: selectedDate }
       )
       .then((res) => {
-        console.log("colturedata",res.data);
+     
         setrecap(res.data);
         var bodyFormData = new FormData();
         bodyFormData.append("rest_id", user_id);
@@ -353,7 +353,7 @@ useEffect(() => {
       borne:0
     }
     completd.map(e=>{
-      if(e.order_type=="surplace"){
+      if(e.order_type=="sur place"){
         return orderTypes.surPlace +=1
       }
       if(e.order_type=="emporter"){

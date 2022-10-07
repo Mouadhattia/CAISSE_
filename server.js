@@ -555,10 +555,10 @@ app.post("/api/clotureData", async (req, res) => {
 
   Object.keys(tvas).forEach(
     (key) =>
-      (tvas[key] = tvas[key].reduce(
-        (acc, curr) => acc + (curr.price * curr.tva) / 100,
+      (tvas[key] = Number(tvas[key].reduce(
+        (acc, curr) => acc + (curr.price/(1+curr.tva/100)) * curr.tva / 100,
         0
-      ))
+      ).toFixed(2)) )
   );
   /*   orderItems.forEach((element) => {
    
@@ -904,7 +904,7 @@ app.post(`/api/products`, async (req, res) => {
       id: p.id,
       name: p.name,
       price: p.price,
-      tva: tvas.filter((el) => el.id == p.tva)[0].tva,
+
       is_alcool: p.is_alcool,
       image: prepareImageUrl(p.image),
       description: p.description,
@@ -1025,8 +1025,7 @@ app.post(`/api/getCaisse`, async (req, res) => {
       () =>
         db.qr_caisse.findOne({
           where: {
-            user_id: user_id,
-          },
+            user_id: user_id}
         }),
       []
     );
@@ -1600,6 +1599,7 @@ app.post("/api/cancelorder",async(req,res)=>{
   
     
   }, {});
+  
   if (orderInDb) {
     const UpdatedTable = await safeDbRequest(
       () =>
@@ -1723,6 +1723,19 @@ app.post("/api/updateorder", async (req, res) => {
   }
   res.send(orderInDb);
 });
+//////////////////////////////////////
+app.post("/api/updateNgerokLink", async (req, res) => {
+  const { user_id, link } = req.body;
+
+  const resturanInDb = await safeDbRequest(() => {
+    return db.qr_restaurant.update(
+      { dynamic_ngrok_link: link },
+      { where: { user_id: user_id } }
+    );
+  }, {});
+  res.status(200).send(resturanInDb);
+});
+///////////////////////////
 app.post(`/api/orders`, async (req, res) => {
   const { order, user_id, client, how_paid } = req.body;
 
@@ -1769,7 +1782,7 @@ app.post(`/api/orders`, async (req, res) => {
     tva = 20;
   } else {
     switch (order.orderType) {
-      case "surplace":
+      case "sur place":
         tva = 10;
         break;
       case "emporter":
@@ -2086,7 +2099,7 @@ app.post("/api/printOrder", async (req, res) => {
     tva = 20;
   } else {
     switch (order.orderType) {
-      case "surplace":
+      case "sur place":
         tva = 10;
         break;
       case "emporter":
@@ -2134,7 +2147,6 @@ app.post("/api/printOrder", async (req, res) => {
     "carte bleu",
     "ticket restaurant",
     "cheque",
-    "Cheque",
     "Especes",
     "Glovo",
     "Just-Eat",
@@ -2166,6 +2178,7 @@ app.post("/api/printOrder", async (req, res) => {
     initData: {
       logoSrc: "/",
     },
+    
     restaurant,
     tvas: tva,
     payments: newarray,
@@ -2178,14 +2191,15 @@ app.post("/api/printOrder", async (req, res) => {
     new: order.new,
     type: "tout",
     order: {
+      TTCprice:order.totalPrice,
       remarque: order.message,
       id: order.order_id,
       orderType: order.orderType,
       tvas: tva,
       from_kiosk:order.from_kiosk,
-      taxPrice: (order.totalPrice * tva) / 100,
+      taxPrice: order.totalPrice/(1+(tva/100))*tva/100,
       table_number: order.table_number,
-      totalPrice: order.totalPrice -(order.totalPrice * tva) / 100,
+      totalPrice: order.totalPrice/(1+(tva/100)),
       nbrCouvert: order.nbrCouverts,
       orderItems: ((items) => {
         items = items.map((item) => {
@@ -2278,7 +2292,7 @@ app.post("/api/printOrder", async (req, res) => {
       "Access-Control-Allow-Origin": "*",
     },
   };
-
+console.log("chej",JSON.stringify(post_data))
   const caisse = await safeDbRequest(
     () =>
       axios.post(post_data.restaurant.dynamic_ngrok_link+"/main.php", post_data, axiosConfig),
@@ -2321,7 +2335,7 @@ app.post("/api/printOrder", async (req, res) => {
 
 app.post("/api/printFinalOrder", async (req, res) => {
   const { user_id, order, type, part, pricepart,isavoir } = req.body;
- 
+ console.log(order)
   let tva = 0;
   let is_alcool = false;
   let test = order.orderItems;
@@ -2334,7 +2348,7 @@ app.post("/api/printFinalOrder", async (req, res) => {
     tva = 20;
   } else {
     switch (order.orderType) {
-      case "surplace":
+      case "sur place":
         tva = 10;
         break;
       case "emporter":
@@ -2384,6 +2398,9 @@ app.post("/api/printFinalOrder", async (req, res) => {
     "ticket restaurant",
     "cheque",
     "Especes",
+    "Uber Eats",
+    "Deliveroo",
+    "Just-Eat","Glovo"
   ];
   var newarray = [];
   for (let index = 0; index < typearray.length; index++) {
@@ -2411,24 +2428,25 @@ app.post("/api/printFinalOrder", async (req, res) => {
     type: type,
     pricepart: pricepart,
     tvas: tva,
-    payments: newarray,
+    payments: order.payments ||newarray,
     numbrpayment: order.numbrpayment,
     userName: order.customer_name || "client",
     customer_adress: order.customer_adress || "",
     phone: order.customer_tel,
-    amount: order.amount,
+    
     amountPaid: order.amountPaid,
     paymentType: order.paymentType,
     new: order.new,
     part: part,
     order: {
+      TTCprice:order.totalPrice,
       remarque: order.message,
       client_id:order.client_id,
       id: order.order_id,
       orderType: order.orderType,
       table_number: order.table_number,
       totalPrice: order.totalPrice/(1+(tva/100)),
-      taxPrice: ((order.totalPrice/(tva+1))*tva)*tva/100,
+      taxPrice: order.totalPrice/(1+(tva/100))*tva/100,
       nbrCouvert: order.nbrCouverts,
       orderItems: ((items) => {
         items = items.map((item) => {

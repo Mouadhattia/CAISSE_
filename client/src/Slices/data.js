@@ -12,6 +12,7 @@ const initialState = {
   dataZ:[],
   isallowedLivraison:false,
   isallowedEmporter:false,
+  ping:false
 
 };
 
@@ -66,6 +67,10 @@ state.isallowedEmporter=!state.isallowedEmporter
     updateLivraison: (state, action) => {
       state.isallowedLivraison=!state.isallowedLivraison
           },
+
+    setPing :(state,action)=>{
+      state.ping =action.payload
+    }
   },
 });
 
@@ -81,7 +86,8 @@ export const {
   updateProduct,
   storeTvaMode,
   storeCoupon,
-  storeDataz
+  storeDataz,
+  setPing
   
 } = dataSlice.actions;
 export default reducer;

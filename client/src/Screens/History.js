@@ -115,10 +115,10 @@ const History = () => {
   //   let price = order.price;
   //   let tva = order.tva;
   //   if (
-  //     selectedOrder.order_type == "surplace" ||
+  //     selectedOrder.order_type == "sur place" ||
   //     selectedOrder.order_type == "livraison"
   //   ) {
-  //     tva = tva_mode.find((e) => e.nom == "surplace").valeur;
+  //     tva = tva_mode.find((e) => e.nom == "sur place").valeur;
   //   } else if (selectedOrder.order_type == "emporter") {
   //     tva = tva_mode.find((e) => e.nom == "emporter").valeur;
   //   }
@@ -379,7 +379,7 @@ const History = () => {
               <th>Prix</th>
               {type == "all" ? <th>Reglement</th> : ""}
               {type == "encours" ? <th>statut</th> : ""}
-              <th>Paiement </th>
+              <th>Paiements </th>
             </tr>
           </thead>
           <tbody className="scro">
@@ -405,7 +405,7 @@ const History = () => {
                       tva = 20;
                     } else {
                       switch (order.orderType) {
-                        case "surplace":
+                        case "sur place":
                           tva = 10;
                           break;
                           case "sur place":
@@ -527,7 +527,7 @@ const History = () => {
                         </td>
                         <td>
                           {order?.orderType==undefined? "de borne":order.orderType}
-                          {order.orderType == "surplace" ? (
+                          {order.orderType == "sur place" ? (
                             <img
                               src={surplace}
                               width={32}
@@ -572,8 +572,8 @@ const History = () => {
                           <b style={{ display: "flex", color: "red" }}>
                             {}
                             {order.totalPrice == undefined
-                              ? order.price + order.taxPrice
-                              : order.totalPrice+order.taxPrice}{" "}
+                              ? order.price
+                              : order.totalPrice}{" "}
                             {renderHTML(`<i>${currency}</i>`)}
                           </b>
                         </td>
@@ -618,7 +618,7 @@ const History = () => {
                   tva = 20;
                 } else {
                   switch (order.orderType) {
-                    case "surplace":
+                    case "sur place":
                       tva = 10;
                       break;
                     case "emporter":
@@ -679,7 +679,7 @@ const History = () => {
                     </td>
                     <td>
                       {order.orderType}
-                      {order.orderType == "surplace" ? (
+                      {order.orderType == "sur place" ? (
                         <img
                           src={surplace}
                           width={32}
@@ -718,8 +718,8 @@ const History = () => {
                       <b style={{ display: "flex", color: "red" }}>
                         {}
                         {order.totalPrice == undefined
-                          ? order.price + (order.tva*order.price/100)
-                          : order.totalPrice+order.taxPrice}{" "}
+                          ? order.price 
+                          : order.totalPrice}{" "}
                         {renderHTML(`<i>${currency}</i>`)}
                       </b>
                     </td>
@@ -771,7 +771,7 @@ const History = () => {
                           ? order.order_type
                           : order.orderType;
                       switch (iss) {
-                        case "surplace":
+                        case "sur place":
                           tva = 10;
                           break;
                         case "emporter":
@@ -806,7 +806,7 @@ const History = () => {
                         </td>
                         <td style={{ display: "flex" }}>
                           {order.order_type}
-                          {order.order_type == "surplace" ? (
+                          {order.order_type == "sur place" ? (
                             <img
                               src={surplace}
                               width={32}
@@ -839,10 +839,9 @@ const History = () => {
                           <b style={{ display: "flex", color: "#ff6b6b" }}>
                             {order.source != 3
                               ? (
-                                  order.price +
-                                  (order.price * tva) / 100
+                                  order.price 
                                 ).toFixed(2)
-                              : order.price + (order.tva*order.price/100)}{" "}
+                              : order.price }{" "}
                             {renderHTML(`<i>${currency}</i>`)}
                           </b>
                         </td>

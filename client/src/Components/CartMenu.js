@@ -6,12 +6,12 @@ import image from "./../Shared/bgg.png";
 import cartbg from "./../Shared/cartbg.png";
 import {
   addNewcheckoutData,
-  cancelOrder,
+
   clearOrders,
-  deletecheckoutData,
+ 
   deleteOrder,
   setCheckoutChange,
-  setNewCurrentOrder,
+ 
   setNewOrder,
   setOrderChange,
 } from "../Slices/order";
@@ -31,8 +31,10 @@ import RemiseModal from "./RemiseModal";
 // import { forEach } from "lodash";
 // import e from "cors";
 import io from "socket.io-client";
+import { setPing } from "../Slices/data";
 
 const CartMenu = ({ selectedTable, setconfirmed, confirmed }) => {
+  const ping = useSelector((state) => state.data.ping);
   const username = localStorage.getItem("username")
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -95,8 +97,8 @@ const CartMenu = ({ selectedTable, setconfirmed, confirmed }) => {
     //
 
     let tva = order.tva;
-    if (orderType == "surplace" || orderType == "livraison") {
-      tva = tva_mode.find((e) => e.nom == "surplace").valeur;
+    if (orderType == "sur place" || orderType == "livraison") {
+      tva = tva_mode.find((e) => e.nom == "sur place").valeur;
     } else if (orderType == "emporter") {
       tva = tva_mode.find((e) => e.nom == "emporter").valeur;
     }
@@ -300,7 +302,7 @@ const CartMenu = ({ selectedTable, setconfirmed, confirmed }) => {
         }`
         : "",
       status: "pending",
-      orderType: orderType || "surplace",
+      orderType: orderType || "sur place",
       paymentType: "Especes",
       totalPrice: calcTotal().tot,
       taxPrice: calcTotal().tva,
@@ -646,7 +648,7 @@ const CartMenu = ({ selectedTable, setconfirmed, confirmed }) => {
             {
               order: currentOrder,
             }
-          );
+          ).then(()=>dispatch(setPing(!ping)));
           const socket = io.connect(process.env.REACT_APP_API_SOCKET);
           socket.emit(`accept${user_id}`, {
             order: {
@@ -666,7 +668,7 @@ const CartMenu = ({ selectedTable, setconfirmed, confirmed }) => {
             {
               order: newCommande,
             }
-          );
+          ).then(()=>dispatch(setPing(!ping)));
           const socket = io.connect(process.env.REACT_APP_API_SOCKET);
           socket.emit(`accept${user_id}`, {
             order: {
@@ -709,7 +711,7 @@ const CartMenu = ({ selectedTable, setconfirmed, confirmed }) => {
             {
               order: currentOrder,
             }
-          );
+          ).then(()=>dispatch(setPing(!ping)));
           const socket = io.connect(process.env.REACT_APP_API_SOCKET);
           socket.emit(`accept${user_id}`, {
             order: {
@@ -730,7 +732,7 @@ const CartMenu = ({ selectedTable, setconfirmed, confirmed }) => {
             {
               order: newCommande,
             }
-          );
+          ).then(()=>dispatch(setPing(!ping)));
           const socket = io.connect(process.env.REACT_APP_API_SOCKET);
           socket.emit(`accept${user_id}`, {
             order: {
@@ -986,7 +988,7 @@ const CartMenu = ({ selectedTable, setconfirmed, confirmed }) => {
               fontFamily: "DS-DIGIT !important",
             }}
           >
-            {`Total : ${(calcTotal().tot + calcTotal().tva).toFixed(2)}`}{" "}
+            {`Total : ${(calcTotal().tot).toFixed(2)}`}{" "}
             {renderHTML(`<i >${currency}</i>`)}
           </h2>
         </div>
